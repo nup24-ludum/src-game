@@ -1,26 +1,20 @@
 package com.mygdx.game;
 
 import com.badlogic.gdx.*;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.ScreenUtils;
 
 public class MyGame extends ApplicationAdapter {
-    SpriteBatch batch;
     Texture img;
     Sprite player;
-
+    View viewUtils;
     private InputProcessor inputProcessor;
-    private float playerX;
-    private float playerY;
 
     @Override
     public void create() {
-        batch = new SpriteBatch();
+        viewUtils = new View();
         img = new Texture("badlogic.jpg");
         debugRenderer = new ShapeRenderer();
         player = new Sprite(img, 64, 64);
@@ -111,54 +105,17 @@ public class MyGame extends ApplicationAdapter {
         Gdx.input.setInputProcessor(inputProcessor);
     }
 
-    private void updatePlayerPosition() {
-        playerX = player.getX();
-        playerY = player.getY();
-    }
-
     ShapeRenderer debugRenderer;
 
-    public void DrawDebugLine(Vector2 start, Vector2 end, int lineWidth, Color color) {
-        Gdx.gl.glLineWidth(lineWidth);
-        debugRenderer.begin(ShapeRenderer.ShapeType.Line);
-        debugRenderer.setColor(color);
-        debugRenderer.line(start, end);
-        debugRenderer.end();
-        Gdx.gl.glLineWidth(1);
-    }
-
-    private void drawGreedField() {
-        for (int i = 0; i < 640; i += 64)
-            DrawDebugLine(new Vector2(i, 0), new Vector2(i, 1000), 2, Color.BLACK);
-        int screenHeight = Gdx.graphics.getHeight();
-        for (int j = 0; j < 640; j += 64) {
-            DrawDebugLine(new Vector2(0, screenHeight - j), new Vector2(1000, screenHeight - j), 2, Color.BLACK);
-        }
-    }
 
     @Override
     public void render() {
         ScreenUtils.clear(1, 1, 0, 1);
-        drawGreedField();
-
-        batch.begin();
-        player.draw(batch);
-        batch.end();
-        // rotateSprite();
-        updatePlayerPosition();
-    }
-
-    private void rotateSprite() {
-        float rotation = player.getRotation();
-        rotation += 10;
-        if (rotation > 360)
-            rotation -= 360;
-        player.setRotation(rotation);
+        viewUtils.drawField(320, 320, 64, 100, -50);
     }
 
     @Override
     public void dispose() {
-        batch.dispose();
-        img.dispose();
+
     }
 }
