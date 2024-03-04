@@ -1,2 +1,4 @@
-package com.mygdx.game;public class Logic {
+package com.mygdx.game;
+
+public class Logic {
 }
