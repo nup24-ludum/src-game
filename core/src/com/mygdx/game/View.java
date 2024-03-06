@@ -2,38 +2,84 @@ package com.mygdx.game;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.ScreenUtils;
 
 public class View {
-    ShapeRenderer debugRenderer;
-    SpriteBatch batch;
+    private final ShapeRenderer debugRenderer;
+    private final SpriteBatch batch;
+    private final Texture img;
+    private static final float sizeOfBlock = 64;
+
     View() {
+        img = new Texture("badlogic.jpg");
         debugRenderer =  new ShapeRenderer();
         batch = new SpriteBatch();
     }
-    public void DrawDebugLine(Vector2 start, Vector2 end, int lineWidth, Color color) {
-        Gdx.gl.glLineWidth(lineWidth);
+
+    public void view(final Logic model) {
+        Vector2 start = new Vector2(0, 0);
+        int fieldWidth = model.getFieldWidth();
+        int fieldHeight = model.getFieldHeight();
+
+        ScreenUtils.clear(1, 1, 0, 1);
+        drawField(fieldWidth, fieldHeight, start);
+
+        final Sprite player = new Sprite(img, 64, 64);
+        Vector2 playerPos = logicToScreen(
+                model.getPlayerX(),
+                model.getPlayerY(),
+                fieldHeight,
+                start
+        );
+        player.setPosition(playerPos.x, playerPos.y - sizeOfBlock);
+        player.setSize(64, 64);
+
+        batch.begin();
+        player.draw(batch);
+        batch.end();
+    }
+
+    private void DrawDebugLine(Vector2 start, Vector2 end) {
+        Gdx.gl.glLineWidth(2);
         debugRenderer.begin(ShapeRenderer.ShapeType.Line);
-        debugRenderer.setColor(color);
+        debugRenderer.setColor(Color.BLACK);
         debugRenderer.line(start, end);
         debugRenderer.end();
         Gdx.gl.glLineWidth(1);
     }
 
-    public void drawField(int width, int height, int sizeOfBlock, int startX, int startY) {
-        int screenHeight = Gdx.graphics.getHeight(); // TODO("Bad!@")
-        for (int i = startX; i <= (startX + width); i += sizeOfBlock)
-            DrawDebugLine(new Vector2(i, reformatYCoordinates(startY, screenHeight)), new Vector2(i, reformatYCoordinates(height + startY, screenHeight)), 2, Color.BLACK);
+    private void drawField(int width, int height, Vector2 start) {
+        // Vert lines
+        for (int i = 0; i <= width; i++) {
+            DrawDebugLine(
+                    logicToScreen(i, 0, height, start),
+                    logicToScreen(i, height, height, start)
+            );
+        }
 
-        for (int j = startY; j <= (startY + height); j += sizeOfBlock) {
-            DrawDebugLine(new Vector2(startX, reformatYCoordinates(j, screenHeight)), new Vector2(width + startX, reformatYCoordinates(j, screenHeight)), 2, Color.BLACK);
+        // Horiz lines
+        for (int i = 0; i <= height; i++) {
+            DrawDebugLine(
+                    logicToScreen(0, i, height, start),
+                    logicToScreen(width, i, height, start)
+            );
         }
     }
 
-    public int reformatYCoordinates( int yInGame, int gameFiledHeight) {
-        return gameFiledHeight - yInGame;
+    // LibGDX goes from bottom left to top right
+    public Vector2 logicToScreen(
+            int xLogic,
+            int yLogic,
+            int fieldHeight,
+            Vector2 start
+    ) {
+        yLogic = fieldHeight - yLogic;
+        return new Vector2((float)xLogic, (float)yLogic).scl(sizeOfBlock).add(start);
     }
 
     public void dispose() {
