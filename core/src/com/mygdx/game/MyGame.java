@@ -12,7 +12,7 @@ public class MyGame extends ApplicationAdapter {
 
     @Override
     public void create() {
-        logic = new Logic(5, 4);
+        logic = new Logic(6, 6);
         view = new View();
 
         InputProcessor inputProcessor = new InputProcessor() {
@@ -51,7 +51,7 @@ public class MyGame extends ApplicationAdapter {
 
             @Override
             public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-                return true;
+                return false;
             }
 
             @Override
@@ -84,7 +84,7 @@ public class MyGame extends ApplicationAdapter {
 
     @Override
     public void render() {
-        view.view(logic);
+        view.view(logic, logic.field);
     }
 
     @Override

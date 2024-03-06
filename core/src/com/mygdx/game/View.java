@@ -8,26 +8,33 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.ScreenUtils;
+import com.mygdx.game.Logic.Cell;
+import com.mygdx.game.Logic.CellType;
 
 public class View {
     private final ShapeRenderer debugRenderer;
     private final SpriteBatch batch;
     private final Texture img;
+    private final Texture grass;
+    private final Texture wall;
     private static final float sizeOfBlock = 64;
 
     View() {
         img = new Texture("badlogic.jpg");
+        grass = new Texture("grass.png");
+        wall = new Texture("wall.jpg");
         debugRenderer =  new ShapeRenderer();
         batch = new SpriteBatch();
     }
 
-    public void view(final Logic model) {
+    public void view(final Logic model, Cell[][] field) {
+        // start - offset from (0, 0)
         Vector2 start = new Vector2(0, 0);
         int fieldWidth = model.getFieldWidth();
         int fieldHeight = model.getFieldHeight();
 
         ScreenUtils.clear(1, 1, 0, 1);
-        drawField(fieldWidth, fieldHeight, start);
+        drawField(fieldWidth, fieldHeight, start, field, fieldHeight);
 
         final Sprite player = new Sprite(img, 64, 64);
         Vector2 playerPos = logicToScreen(
@@ -53,7 +60,29 @@ public class View {
         Gdx.gl.glLineWidth(1);
     }
 
-    private void drawField(int width, int height, Vector2 start) {
+    private void drawTexture(CellType type, int posX, int posY) {
+        Texture toDraw;
+        switch (type) {
+            case FLOR: {
+                toDraw = grass;
+                break;
+            }
+            case WALL: {
+                toDraw = wall;
+                break;
+            }
+            default: {
+                toDraw = img;
+                break;
+            }
+
+        }
+        batch.begin();
+        batch.draw(toDraw, posX, posY);
+        batch.end();
+    }
+
+    private void drawField(int width, int height, Vector2 start, Logic.Cell[][] field, int fieldHeight) {
         // Vert lines
         for (int i = 0; i <= width; i++) {
             DrawDebugLine(
@@ -69,7 +98,18 @@ public class View {
                     logicToScreen(width, i, height, start)
             );
         }
+        for (int i = 0; i < field.length; i++)
+            for (int j = 0; j < field[i].length; j++) {
+                Vector2 currentCellPos = logicToScreen(
+                        j,
+                        i + 1,
+                        fieldHeight,
+                        start
+                );
+                drawTexture(field[i][j].type, (int)currentCellPos.x, (int)currentCellPos.y);
+            }
     }
+
 
     // LibGDX goes from bottom left to top right
     public Vector2 logicToScreen(
