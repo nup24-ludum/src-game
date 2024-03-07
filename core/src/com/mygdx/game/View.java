@@ -8,7 +8,6 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.ScreenUtils;
-import com.mygdx.game.Logic.Cell;
 import com.mygdx.game.Logic.CellType;
 
 public class View {
@@ -59,7 +58,7 @@ public class View {
     private void drawTexture(CellType type, Vector2 pos) {
         Texture toDraw;
         switch (type) {
-            case FLOR: {
+            case FLOOR: {
                 toDraw = grass;
                 break;
             }
@@ -94,7 +93,7 @@ public class View {
                     logicToScreen(new Logic.Pos(width, i), height, start)
             );
         }
-        for (int y = 0; y < logic.getFieldHeight(); y++)
+        for (int y = 0; y < logic.getFieldHeight(); y++) {
             for (int x = 0; x < logic.getFieldWidth(); x++) {
                 Vector2 currentCellPos = logicToScreen(
                         new Logic.Pos(x, y + 1),
@@ -103,6 +102,7 @@ public class View {
                 );
                 drawTexture(logic.getCell(x, y).type, currentCellPos);
             }
+        }
     }
 
 
