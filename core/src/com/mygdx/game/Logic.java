@@ -23,6 +23,20 @@ public class Logic {
             this.hasShadow = hasShadow;
         }
 
+        public String toShortString() {
+            if (hasShadow) {
+                return "X";
+            }
+
+            switch (type) {
+                case FLOR: return " ";
+                case WALL: return "W";
+                case ENTRANCE: return "E";
+                case TREASURE: return "$";
+            }
+
+            return "?";
+        }
     }
 
     public static class Pos {
@@ -79,8 +93,8 @@ public class Logic {
         this.fieldHeight = fieldHeight;
         // test load field
         this.field = new Cell[fieldHeight][fieldWidth];
-        for (int i = 0; i < field.length; i++)
-            for (int j = 0; j < field[i].length; j++){
+        for (int i = 0; i < field.length; i++) {
+            for (int j = 0; j < field[i].length; j++) {
                 if (i == 0 && j == 0) {
                     field[i][j] = new Cell(CellType.FLOR, false);
                     continue;
@@ -95,6 +109,15 @@ public class Logic {
                 }
                 field[i][j] = new Cell(CellType.FLOR, false);
             }
+        }
+
+        System.out.println("Field dump:");
+        for (int y = 0; y < fieldHeight; y++) {
+            for (int x = 0; x < fieldWidth; x++) {
+                System.out.print(field[y][x].toShortString());
+            }
+            System.out.print("\n");
+        }
 
         System.out.println("New game field os size (" + fieldWidth + ", " + fieldHeight + ")");
         System.out.println("Player is at " + playerPos);
