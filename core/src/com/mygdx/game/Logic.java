@@ -9,7 +9,7 @@ public class Logic {
     }
 
     public enum CellType {
-        FLOR,
+        FLOOR,
         WALL,
         ENTRANCE,
         TREASURE
@@ -29,7 +29,7 @@ public class Logic {
             }
 
             switch (type) {
-                case FLOR: return " ";
+                case FLOOR: return " ";
                 case WALL: return "W";
                 case ENTRANCE: return "E";
                 case TREASURE: return "$";
@@ -96,18 +96,18 @@ public class Logic {
         for (int i = 0; i < field.length; i++) {
             for (int j = 0; j < field[i].length; j++) {
                 if (i == 0 && j == 0) {
-                    field[i][j] = new Cell(CellType.FLOR, false);
+                    field[i][j] = new Cell(CellType.FLOOR, false);
                     continue;
                 }
                 if (i == 1 && j == 0) {
-                    field[i][j] = new Cell(CellType.FLOR, false);
+                    field[i][j] = new Cell(CellType.FLOOR, false);
                     continue;
                 }
                 if (i == 0 || i == field.length - 1 || j == 0) {
                     field[i][j] = new Cell(CellType.WALL, false);
                     continue;
                 }
-                field[i][j] = new Cell(CellType.FLOR, false);
+                field[i][j] = new Cell(CellType.FLOOR, false);
             }
         }
 
