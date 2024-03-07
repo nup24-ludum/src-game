@@ -37,12 +37,8 @@ public class View {
         drawField(fieldWidth, fieldHeight, start, model.getField(), fieldHeight);
 
         final Sprite player = new Sprite(img, 64, 64);
-        Vector2 playerPos = logicToScreen(
-                model.getPlayerX(),
-                model.getPlayerY(),
-                fieldHeight,
-                start
-        );
+        final Logic.Pos lPlayerPos = model.getPlayerPos();
+        Vector2 playerPos = logicToScreen(lPlayerPos, fieldHeight, start);
         player.setPosition(playerPos.x, playerPos.y - sizeOfBlock);
         player.setSize(64, 64);
 
@@ -86,23 +82,22 @@ public class View {
         // Vert lines
         for (int i = 0; i <= width; i++) {
             DrawDebugLine(
-                    logicToScreen(i, 0, height, start),
-                    logicToScreen(i, height, height, start)
+                    logicToScreen(new Logic.Pos(i, 0), height, start),
+                    logicToScreen(new Logic.Pos(i, height), height, start)
             );
         }
 
         // Horiz lines
         for (int i = 0; i <= height; i++) {
             DrawDebugLine(
-                    logicToScreen(0, i, height, start),
-                    logicToScreen(width, i, height, start)
+                    logicToScreen(new Logic.Pos(0, i), height, start),
+                    logicToScreen(new Logic.Pos(width, i), height, start)
             );
         }
         for (int i = 0; i < field.length; i++)
             for (int j = 0; j < field[i].length; j++) {
                 Vector2 currentCellPos = logicToScreen(
-                        j,
-                        i + 1,
+                        new Logic.Pos(j, i + 1),
                         fieldHeight,
                         start
                 );
@@ -113,13 +108,14 @@ public class View {
 
     // LibGDX goes from bottom left to top right
     public Vector2 logicToScreen(
-            int xLogic,
-            int yLogic,
-            int fieldHeight,
-            Vector2 start
+            final Logic.Pos lPos,
+            final int fieldHeight,
+            final Vector2 start
     ) {
-        yLogic = fieldHeight - yLogic;
-        return new Vector2((float)xLogic, (float)yLogic).scl(sizeOfBlock).add(start);
+        return new Vector2(
+                (float)lPos.x,
+                (float)(fieldHeight - lPos.y)
+        ).scl(sizeOfBlock).add(start);
     }
 
     public void dispose() {
