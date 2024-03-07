@@ -25,6 +25,32 @@ public class Logic {
 
     }
 
+    public static class Pos {
+        public int x;
+        public int y;
+
+        public Pos(int x, int y) {
+            this.x = x;
+            this.y = y;
+        }
+
+        Pos applyDir(final MoveDirection dir) {
+            switch (dir) {
+                case LEFT:  return new Pos(x - 1, y);
+                case RIGHT: return new Pos(x + 1, y);
+                case UP:    return new Pos(x, y - 1);
+                case DOWN:  return new Pos(x, y + 1);
+            }
+
+            return this;
+        }
+
+        @Override
+        public String toString() {
+            return "(" + x + ", " + y + ")";
+        }
+    }
+
     public int getFieldWidth() {
         return fieldWidth;
     }
@@ -33,12 +59,8 @@ public class Logic {
         return fieldHeight;
     }
 
-    public int getPlayerX() {
-        return playerX;
-    }
-
-    public int getPlayerY() {
-        return playerY;
+    public Pos getPlayerPos() {
+        return playerPos;
     }
 
     public Cell[][] getField() {
@@ -46,12 +68,13 @@ public class Logic {
     }
 
     private final Cell[][] field;
-    private int playerX;
-    private int playerY;
+    private Pos playerPos;
     private final int fieldWidth;
     private final int fieldHeight;
 
     public Logic(int fieldWidth, int fieldHeight) {
+        // TODO make this constructor argument
+        this.playerPos = new Pos(0, 0);
         this.fieldWidth = fieldWidth;
         this.fieldHeight = fieldHeight;
         // test load field
@@ -74,33 +97,33 @@ public class Logic {
             }
 
         System.out.println("New game field os size (" + fieldWidth + ", " + fieldHeight + ")");
-        System.out.println("Player is at (" + playerX + ", " + playerY + ")");
+        System.out.println("Player is at " + playerPos);
     }
 
     public void movePlayer(final MoveDirection dir) {
-        System.out.println("Moving player at (" + playerX + ", " + playerY + ") in dir " + dir);
-        switch (dir) {
-            case LEFT:
-                if (playerX <= 0) { break; }
-                if (field[playerY][playerX - 1].type == CellType.WALL) {break;}
-                playerX -= 1;
-                break;
-            case RIGHT:
-                if (playerX + 1 >= fieldWidth) { break; }
-                if (field[playerY][playerX + 1].type == CellType.WALL) {break;}
-                playerX += 1;
-                break;
-            case UP:
-                if (playerY <= 0) { break; }
-                if (field[playerY - 1][playerX].type == CellType.WALL) {break;}
-                playerY -= 1;
-                break;
-            case DOWN:
-                if (playerY + 1 >= fieldHeight) { break; }
-                if (field[playerY + 1][playerX].type == CellType.WALL) {break;}
-                playerY += 1;
-                break;
+        System.out.println("Moving player at " + playerPos + " in dir " + dir);
+        final Pos newPos = playerPos.applyDir(dir);
+        if (posValid(newPos)) {
+            playerPos = newPos;
+        } else {
+            System.out.println("Player move rejected");
         }
-        System.out.println("Player is now at (" + playerX + ", " + playerY + ")");
+        System.out.println("Player is now at " + playerPos);
+    }
+
+    private boolean posValid(final Pos pos) {
+        if (pos.x < 0 || pos.y < 0) {
+            return false;
+        }
+
+        if (pos.x >= fieldWidth || pos.y >= fieldHeight) {
+            return false;
+        }
+
+        if (field[pos.x][pos.y].type == CellType.WALL) {
+            return false;
+        }
+
+        return !field[pos.x][pos.y].hasShadow;
     }
 }
