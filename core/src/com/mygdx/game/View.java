@@ -13,13 +13,15 @@ import com.mygdx.game.Logic.CellType;
 public class View {
     private final ShapeRenderer debugRenderer;
     private final SpriteBatch batch;
-    private final Texture img;
+    private final Texture playerImg;
+    private final Texture boxImg;
     private final Texture grass;
     private final Texture wall;
     private static final float sizeOfBlock = 64;
 
     View() {
-        img = new Texture("badlogic.jpg");
+        playerImg = new Texture("badlogic.jpg");
+        boxImg = new Texture("box.png");
         grass = new Texture("grass.png");
         wall = new Texture("wall.jpg");
         debugRenderer =  new ShapeRenderer();
@@ -35,14 +37,30 @@ public class View {
         ScreenUtils.clear(1, 1, 0, 1);
         drawField(fieldWidth, fieldHeight, start, model, fieldHeight);
 
-        final Sprite player = new Sprite(img, 64, 64);
-        final Logic.Pos lPlayerPos = model.getPlayerPos();
-        Vector2 playerPos = logicToScreen(lPlayerPos, fieldHeight, start);
-        player.setPosition(playerPos.x, playerPos.y - sizeOfBlock);
-        player.setSize(64, 64);
-
         batch.begin();
-        player.draw(batch);
+        model.allThings().forEach(entry -> {
+            final Logic.Pos lPos = entry.getKey();
+            final Vector2 pos = logicToScreen(lPos, fieldHeight, start).sub(
+                    new Vector2(0, sizeOfBlock)
+            );
+            final Logic.ThingType ty = entry.getValue();
+            final Texture img;
+            switch (ty) {
+                case PLAYER:
+                    img = playerImg;
+                    break;
+                case BOX:
+                    img = boxImg;
+                    break;
+                default:
+                    img = null;
+            }
+            final Sprite sprite = new Sprite(img, 64, 64);
+            sprite.setSize(64, 64);
+            sprite.setPosition(pos.x, pos.y);
+
+            sprite.draw(batch);
+        });
         batch.end();
     }
 
@@ -67,7 +85,7 @@ public class View {
                 break;
             }
             default: {
-                toDraw = img;
+                toDraw = playerImg;
                 break;
             }
 
