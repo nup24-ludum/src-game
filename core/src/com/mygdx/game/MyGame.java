@@ -80,7 +80,7 @@ public class MyGame extends ApplicationAdapter {
 
     @Override
     public void render() {
-        view.view(logic, logic.field);
+        view.view(logic);
     }
 
     @Override

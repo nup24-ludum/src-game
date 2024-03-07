@@ -27,14 +27,14 @@ public class View {
         batch = new SpriteBatch();
     }
 
-    public void view(final Logic model, Cell[][] field) {
+    public void view(final Logic model) {
         // start - offset from (0, 0)
         Vector2 start = new Vector2(0, 0);
         int fieldWidth = model.getFieldWidth();
         int fieldHeight = model.getFieldHeight();
 
         ScreenUtils.clear(1, 1, 0, 1);
-        drawField(fieldWidth, fieldHeight, start, field, fieldHeight);
+        drawField(fieldWidth, fieldHeight, start, model.getField(), fieldHeight);
 
         final Sprite player = new Sprite(img, 64, 64);
         Vector2 playerPos = logicToScreen(

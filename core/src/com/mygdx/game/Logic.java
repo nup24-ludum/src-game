@@ -41,8 +41,11 @@ public class Logic {
         return playerY;
     }
 
-    public Cell[][] field;
+    public Cell[][] getField() {
+        return field;
+    }
 
+    private final Cell[][] field;
     private int playerX;
     private int playerY;
     private final int fieldWidth;
