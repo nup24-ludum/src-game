@@ -77,8 +77,8 @@ public class Logic {
         return playerPos;
     }
 
-    public Cell[][] getField() {
-        return field;
+    public Cell getCell(final int x, final int y) {
+        return field[y][x];
     }
 
     private final Cell[][] field;
@@ -143,10 +143,12 @@ public class Logic {
             return false;
         }
 
-        if (field[pos.x][pos.y].type == CellType.WALL) {
+        final Cell cell = getCell(pos.x, pos.y);
+
+        if (cell.type == CellType.WALL) {
             return false;
         }
 
-        return !field[pos.x][pos.y].hasShadow;
+        return !cell.hasShadow;
     }
 }

@@ -34,7 +34,7 @@ public class View {
         int fieldHeight = model.getFieldHeight();
 
         ScreenUtils.clear(1, 1, 0, 1);
-        drawField(fieldWidth, fieldHeight, start, model.getField(), fieldHeight);
+        drawField(fieldWidth, fieldHeight, start, model, fieldHeight);
 
         final Sprite player = new Sprite(img, 64, 64);
         final Logic.Pos lPlayerPos = model.getPlayerPos();
@@ -56,7 +56,7 @@ public class View {
         Gdx.gl.glLineWidth(1);
     }
 
-    private void drawTexture(CellType type, int posX, int posY) {
+    private void drawTexture(CellType type, Vector2 pos) {
         Texture toDraw;
         switch (type) {
             case FLOR: {
@@ -74,11 +74,11 @@ public class View {
 
         }
         batch.begin();
-        batch.draw(toDraw, posX, posY);
+        batch.draw(toDraw, pos.x, pos.y);
         batch.end();
     }
 
-    private void drawField(int width, int height, Vector2 start, Logic.Cell[][] field, int fieldHeight) {
+    private void drawField(int width, int height, Vector2 start, final Logic logic, int fieldHeight) {
         // Vert lines
         for (int i = 0; i <= width; i++) {
             DrawDebugLine(
@@ -94,14 +94,14 @@ public class View {
                     logicToScreen(new Logic.Pos(width, i), height, start)
             );
         }
-        for (int i = 0; i < field.length; i++)
-            for (int j = 0; j < field[i].length; j++) {
+        for (int y = 0; y < logic.getFieldHeight(); y++)
+            for (int x = 0; x < logic.getFieldWidth(); x++) {
                 Vector2 currentCellPos = logicToScreen(
-                        new Logic.Pos(j, i + 1),
+                        new Logic.Pos(x, y + 1),
                         fieldHeight,
                         start
                 );
-                drawTexture(field[i][j].type, (int)currentCellPos.x, (int)currentCellPos.y);
+                drawTexture(logic.getCell(x, y).type, currentCellPos);
             }
     }
 
