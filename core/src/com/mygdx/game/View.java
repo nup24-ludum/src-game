@@ -17,6 +17,7 @@ public class View {
     private final Texture boxImg;
     private final Texture grass;
     private final Texture wall;
+    private final Texture shadow;
     private static final float sizeOfBlock = 64;
 
     View() {
@@ -26,6 +27,7 @@ public class View {
         wall = new Texture("wall.jpg");
         debugRenderer =  new ShapeRenderer();
         batch = new SpriteBatch();
+        shadow = new Texture("HandDST.png");
     }
 
     public void view(final Logic model) {
@@ -119,9 +121,17 @@ public class View {
                         start
                 );
                 drawTexture(logic.getCell(x, y).type, currentCellPos);
+                if (logic.getCell(x, y).hasShadow) { drawShadow(currentCellPos); }
             }
         }
     }
+
+    private void drawShadow(Vector2 pos) {
+        batch.begin();
+        batch.draw(shadow, pos.x, pos.y);
+        batch.end();
+    }
+
 
 
     // LibGDX goes from bottom left to top right
