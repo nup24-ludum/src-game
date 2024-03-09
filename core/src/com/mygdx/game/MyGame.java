@@ -8,8 +8,8 @@ import java.util.Map;
 public class MyGame extends ApplicationAdapter {
     private View view;
     private Logic logic;
-    private int fieldWidth = 6;
-    private int fieldHeight = 6;
+    private final int fieldWidth = 6;
+    private final int fieldHeight = 6;
 
     private Map<Logic.Pos, Logic.ThingType> thingTypeMap;
 
