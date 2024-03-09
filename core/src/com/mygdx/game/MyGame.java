@@ -2,13 +2,20 @@ package com.mygdx.game;
 
 import com.badlogic.gdx.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class MyGame extends ApplicationAdapter {
     private View view;
     private Logic logic;
+    private int fieldWidth = 6;
+    private int fieldHeight = 6;
+
+    private Map<Logic.Pos, Logic.ThingType> thingTypeMap;
 
     @Override
     public void create() {
-        logic = new Logic(6, 6);
+        logic = new Logic(fieldWidth, fieldHeight, loadField(), thingTypeMap);
         view = new View();
 
         InputProcessor inputProcessor = new InputProcessor() {
@@ -77,6 +84,53 @@ public class MyGame extends ApplicationAdapter {
         };
         Gdx.input.setInputProcessor(inputProcessor);
     }
+    /*
+    * This is template fot loading class from libGDX interface
+    * Have to implement new function loadLevelFromFile, that construct libGDX TileMap interface.
+    * And then give it to this function.
+    * TODO implement this method!
+    */
+    public Logic.Cell[][] loadField() {
+        Logic.Pos playerPos = new Logic.Pos(0, 0);
+        Logic.Cell[][] field = new Logic.Cell[6][6];
+        for (int i = 0; i < field.length; i++) {
+            for (int j = 0; j < field[i].length; j++) {
+                if (i == 0 && j == 0) {
+                    field[i][j] = new Logic.Cell(Logic.CellType.FLOOR, false);
+                    continue;
+                }
+                if (i == 1 && j == 0) {
+                    field[i][j] = new Logic.Cell(Logic.CellType.FLOOR, false);
+                    continue;
+                }
+                if (i == 0 || i == field.length - 1 || j == 0) {
+                    field[i][j] = new Logic.Cell(Logic.CellType.WALL, false);
+                    continue;
+                }
+                field[i][j] = new Logic.Cell(Logic.CellType.FLOOR, false);
+            }
+        }
+        System.out.println("Field dump:");
+        for (int y = 0; y < fieldHeight; y++) {
+            for (int x = 0; x < fieldWidth; x++) {
+                System.out.print(field[y][x].toShortString());
+            }
+            System.out.print("\n");
+        }
+        System.out.println("New game field os size (" + fieldWidth + ", " + fieldHeight + ")");
+        System.out.println("Player is at " + playerPos);
+        spawnThings(playerPos);
+        return field;
+    }
+    //TODO all constants are hardcoded - fix!!!
+    // TODO make this method depending from loaded field!
+    private void spawnThings(Logic.Pos playerPos) {
+        this.thingTypeMap = new HashMap<>();
+        thingTypeMap.put(playerPos, Logic.ThingType.PLAYER);
+        thingTypeMap.put(new Logic.Pos(1, 1), Logic.ThingType.BOX);
+        thingTypeMap.put(new Logic.Pos(3, 3), Logic.ThingType.BOX);
+    }
+
 
     @Override
     public void render() {

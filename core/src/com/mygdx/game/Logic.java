@@ -114,46 +114,15 @@ public class Logic {
     private final int fieldWidth;
     private final int fieldHeight;
 
-    public Logic(int fieldWidth, int fieldHeight) {
+    public Logic(int fieldWidth, int fieldHeight, Cell[][] field, Map<Pos, ThingType> thingTypeMap) {
         // TODO make this constructor argument
         this.playerPos = new Pos(0, 0);
         this.fieldWidth = fieldWidth;
         this.fieldHeight = fieldHeight;
         // test load field
-        this.thingTypeMap = new HashMap<>();
-        this.field = new Cell[fieldHeight][fieldWidth];
-        for (int i = 0; i < field.length; i++) {
-            for (int j = 0; j < field[i].length; j++) {
-                if (i == 0 && j == 0) {
-                    field[i][j] = new Cell(CellType.FLOOR, false);
-                    continue;
-                }
-                if (i == 1 && j == 0) {
-                    field[i][j] = new Cell(CellType.FLOOR, false);
-                    continue;
-                }
-                if (i == 0 || i == field.length - 1 || j == 0) {
-                    field[i][j] = new Cell(CellType.WALL, false);
-                    continue;
-                }
-                field[i][j] = new Cell(CellType.FLOOR, false);
-            }
-        }
 
-        System.out.println("Field dump:");
-        for (int y = 0; y < fieldHeight; y++) {
-            for (int x = 0; x < fieldWidth; x++) {
-                System.out.print(field[y][x].toShortString());
-            }
-            System.out.print("\n");
-        }
-
-        thingTypeMap.put(playerPos, ThingType.PLAYER);
-        thingTypeMap.put(new Pos(1, 1), ThingType.BOX); // TODO "spawn_thing" method?
-        thingTypeMap.put(new Pos(3, 3), ThingType.BOX);
-
-        System.out.println("New game field os size (" + fieldWidth + ", " + fieldHeight + ")");
-        System.out.println("Player is at " + playerPos);
+        this.field = field;
+        this.thingTypeMap = thingTypeMap;
     }
 
     public void movePlayer(final MoveDirection dir) {
