@@ -1,10 +1,27 @@
 package com.mygdx.game;
 
-import java.util.Map;
+import jdk.javadoc.internal.doclets.toolkit.util.Utils;
+
+import java.util.*;
 import java.util.stream.Stream;
 
 public class Logic {
     // TODO things probably should be made into classes
+
+    // TODO make it generic!!!!!
+    public class Pair {
+        public Pos pos;
+        public MoveDirection dir;
+        Pair(Pos pos, MoveDirection dir) {
+            this.pos = pos;
+            this.dir = dir;
+        }
+    }
+    public enum CellState {
+        VISITED,
+        UNVISITED,
+        CYCLE
+    }
     public enum ThingType {
         PLAYER,
         BOX,
@@ -109,6 +126,7 @@ public class Logic {
     private Pos playerPos;
     private final int fieldWidth;
     private final int fieldHeight;
+    private final ArrayList<Pair> history;
 
     public Logic(int fieldWidth, int fieldHeight, Cell[][] field, Map<Pos, ThingType> thingTypeMap) {
         // TODO make this constructor argument
@@ -119,12 +137,120 @@ public class Logic {
 
         this.field = field;
         this.thingTypeMap = thingTypeMap;
+        history = new ArrayList<>();
     }
 
     public void movePlayer(final MoveDirection dir) {
         if (moveThing(playerPos, dir)) {
             playerPos = playerPos.applyDir(dir);
         }
+        history.add(new Pair(playerPos, dir));
+    }
+
+    // TODO should be private and called when treasure was stolen.
+    public void applyShadowToField() {
+        CellState[][] visited = new CellState[fieldHeight][fieldWidth];
+        for (CellState[] row : visited) {
+            Arrays.fill(row, CellState.UNVISITED);
+        }
+
+        for (int i = 0; i < history.size() - 1; i++) {
+            Pos currentCellPos = history.get(i).pos;
+//            getCell(currentCellPos.x, currentCellPos.y).hasShadow = true; TODO (move to another place!)
+            if ( visited[currentCellPos.y][currentCellPos.x] == CellState.UNVISITED) {
+                visited[currentCellPos.y][currentCellPos.x] = CellState.VISITED;
+            } else if (visited[currentCellPos.y][currentCellPos.x] == CellState.VISITED) {
+                int j = i - 1;
+                Pos curPosToFindCycle = history.get(j).pos;
+
+                for (;! curPosToFindCycle.equals(currentCellPos); j--) {
+                    curPosToFindCycle = history.get(j).pos;
+                    visited[curPosToFindCycle.y][curPosToFindCycle.x] = CellState.CYCLE;
+                }
+                if (! validateCycle(visited, currentCellPos, j)) {
+                    int h = i - 1;
+                    Pos curPos;
+                    for (; h >= j; h--) {
+                        curPos = history.get(h).pos;
+                        if (visited[curPos.y][curPos.x] == CellState.CYCLE)
+                            visited[curPos.y][curPos.x] = CellState.VISITED;
+                    }
+                }
+            }
+        }
+        for (Pair record: history) {
+            Pos curPos = record.pos;
+            if (visited[curPos.y][curPos.x] == CellState.VISITED) {
+                getCell(curPos.x, curPos.y).hasShadow = true;
+            }
+        }
+    }
+
+    private Pos findMostLeftPos(int historyIndexOfStartLower, Pos startCyclePos) {
+        Pos currentLeftMin = startCyclePos;
+        for (int i = historyIndexOfStartLower; history.get(i).pos != startCyclePos; i++) {
+            Pos currentPos = history.get(i).pos;
+            if (currentLeftMin.x > currentPos.x) {
+                currentLeftMin = currentPos;
+            }
+        }
+        return currentLeftMin;
+    }
+
+    private Pos findMostTopPos(int historyIndexOfStartLower, Pos startCyclePos) {
+        Pos currentTopMin = startCyclePos;
+        for (int i = historyIndexOfStartLower; history.get(i).pos != startCyclePos; i++) {
+            Pos currentPos = history.get(i).pos;
+            if (currentTopMin.y > currentPos.y) {
+                currentTopMin = currentPos;
+            }
+        }
+        return currentTopMin;
+    }
+
+    private int findRightMost(int historyIndexOfStartLower, Pos startCyclePos) {
+        int currentRightMax = startCyclePos.x;
+        for (int i = historyIndexOfStartLower; history.get(i).pos != startCyclePos; i++) {
+            Pos currentPos = history.get(i).pos;
+            if (currentRightMax < currentPos.x) {
+                currentRightMax = currentPos.x;
+            }
+        }
+        return currentRightMax;
+    }
+
+    private boolean validateCycle( CellState[][] visited, Pos startCyclePos, int historyIndexOfStartLower) {
+        Pos mostLeftPos = findMostLeftPos(historyIndexOfStartLower, startCyclePos);
+        Pos mostTopPos = findMostTopPos(historyIndexOfStartLower, startCyclePos);
+        int rightMostX = findRightMost(historyIndexOfStartLower, startCyclePos);
+        Pos currentPos = new Pos(mostLeftPos.x, mostTopPos.y);
+
+        for (;currentPos.y < fieldHeight; currentPos.y++){
+            boolean stepIntoCycle = false;
+            currentPos.x = mostLeftPos.x;
+            for (; currentPos.x < fieldWidth && currentPos.x <= rightMostX; currentPos.x++) {
+                if (visited[currentPos.y][currentPos.x] == CellState.UNVISITED) {
+                    if (stepIntoCycle) {
+                        return true;
+                    } else {
+                        continue;
+                    }
+                }
+                if (visited[currentPos.y][currentPos.x] == CellState.VISITED) {
+                    continue;
+                }
+                if (visited[currentPos.y][currentPos.x] == CellState.CYCLE) {
+                    if (! stepIntoCycle) {
+                        if (visited[currentPos.y][currentPos.x + 1] != CellState.CYCLE && currentPos.x + 1 <= rightMostX) {
+                            stepIntoCycle = true;
+                        }
+                    } else {
+                        break;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     public Stream<Map.Entry<Pos, ThingType>> allThings() {
@@ -162,6 +288,7 @@ public class Logic {
         return true;
     }
 
+    /* Function checks that you can go or slide a box on this position. */
     private boolean posValid(final Pos pos) {
         if (pos.x < 0 || pos.y < 0) {
             return false;
