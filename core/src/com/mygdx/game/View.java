@@ -27,7 +27,7 @@ public class View {
         wall = new Texture("wall.jpg");
         debugRenderer =  new ShapeRenderer();
         batch = new SpriteBatch();
-        shadow = new Texture("HandDST.png");
+        shadow = new Texture("shadow-2.png");
     }
 
     public void view(final Logic model) {

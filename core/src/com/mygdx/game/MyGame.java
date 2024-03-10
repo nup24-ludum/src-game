@@ -8,8 +8,8 @@ import java.util.Map;
 public class MyGame extends ApplicationAdapter {
     private View view;
     private Logic logic;
-    private final int fieldWidth = 6;
-    private final int fieldHeight = 6;
+    private final int fieldWidth = 8;
+    private final int fieldHeight = 8;
 
     private Map<Logic.Pos, Logic.ThingType> thingTypeMap;
 
@@ -36,6 +36,10 @@ public class MyGame extends ApplicationAdapter {
                     }
                     case Input.Keys.S: {
                         logic.movePlayer(Logic.MoveDirection.DOWN);
+                        break;
+                    }
+                    case Input.Keys.K: {
+                        logic.applyShadowToField();
                         break;
                     }
                 }
@@ -92,7 +96,7 @@ public class MyGame extends ApplicationAdapter {
     */
     public Logic.Cell[][] loadField() {
         Logic.Pos playerPos = new Logic.Pos(0, 0);
-        Logic.Cell[][] field = new Logic.Cell[6][6];
+        Logic.Cell[][] field = new Logic.Cell[fieldHeight][fieldWidth];
         for (int i = 0; i < field.length; i++) {
             for (int j = 0; j < field[i].length; j++) {
                 if (i == 0 && j == 0) {
