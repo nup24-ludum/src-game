@@ -147,8 +147,8 @@ public class Logic {
     public void movePlayer(final MoveDirection dir) {
         if (moveThing(playerPos, dir)) {
             playerPos = playerPos.applyDir(dir);
+            history.add(new Pair(playerPos, dir));
         }
-        history.add(new Pair(playerPos, dir));
     }
 
     // TODO should be private and called when treasure was stolen.
