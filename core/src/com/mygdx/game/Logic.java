@@ -126,7 +126,7 @@ public class Logic {
     private Pos playerPos;
     private final int fieldWidth;
     private final int fieldHeight;
-    private final ArrayList<Pair> history;
+    private final List<Pair> history;
 
     public Logic(int fieldWidth, int fieldHeight, Cell[][] field, Map<Pos, ThingType> thingTypeMap) {
         // TODO make this constructor argument
@@ -138,6 +138,10 @@ public class Logic {
         this.field = field;
         this.thingTypeMap = thingTypeMap;
         history = new ArrayList<>();
+    }
+
+    public Collection<Pair> getHistory() {
+        return Collections.unmodifiableCollection(history);
     }
 
     public void movePlayer(final MoveDirection dir) {
