@@ -2,6 +2,7 @@ package com.mygdx.game;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -35,10 +36,12 @@ public class View {
         Vector2 start = new Vector2(0, 0);
         int fieldWidth = model.getFieldWidth();
         int fieldHeight = model.getFieldHeight();
+        Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
-        ScreenUtils.clear(1, 1, 0, 1);
+//        ScreenUtils.clear(1, 1, 0, 1);
         drawField(fieldWidth, fieldHeight, start, model, fieldHeight);
-
+//
         batch.begin();
         model.allThings().forEach(entry -> {
             final Logic.Pos lPos = entry.getKey();
@@ -64,12 +67,28 @@ public class View {
             sprite.draw(batch);
         });
         batch.end();
+
+        for (final Logic.Pair pair : model.getHistory()) {
+            // pair contains an old pos.
+            final Logic.Pos t = pair.pos.applyDir(pair.dir);
+            final Logic.Pos oldPos = new Logic.Pos(
+                    pair.pos.x - (t.x - pair.pos.x),
+                    pair.pos.y - (t.y - pair.pos.y)
+            );
+
+            final Vector2 beg = logicToScreen(oldPos, fieldHeight, start)
+                    .add(sizeOfBlock / 2, -sizeOfBlock / 2);
+            final Vector2 end = logicToScreen(pair.pos, fieldHeight, start)
+                    .add(sizeOfBlock / 2, -sizeOfBlock / 2);
+
+            DrawDebugLine(beg, end);
+        }
     }
 
     private void DrawDebugLine(Vector2 start, Vector2 end) {
         Gdx.gl.glLineWidth(2);
         debugRenderer.begin(ShapeRenderer.ShapeType.Line);
-        debugRenderer.setColor(Color.BLACK);
+        debugRenderer.setColor(Color.RED);
         debugRenderer.line(start, end);
         debugRenderer.end();
         Gdx.gl.glLineWidth(1);
@@ -98,21 +117,6 @@ public class View {
     }
 
     private void drawField(int width, int height, Vector2 start, final Logic logic, int fieldHeight) {
-        // Vert lines
-        for (int i = 0; i <= width; i++) {
-            DrawDebugLine(
-                    logicToScreen(new Logic.Pos(i, 0), height, start),
-                    logicToScreen(new Logic.Pos(i, height), height, start)
-            );
-        }
-
-        // Horiz lines
-        for (int i = 0; i <= height; i++) {
-            DrawDebugLine(
-                    logicToScreen(new Logic.Pos(0, i), height, start),
-                    logicToScreen(new Logic.Pos(width, i), height, start)
-            );
-        }
         for (int y = 0; y < logic.getFieldHeight(); y++) {
             for (int x = 0; x < logic.getFieldWidth(); x++) {
                 Vector2 currentCellPos = logicToScreen(
