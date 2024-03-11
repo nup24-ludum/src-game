@@ -241,7 +241,7 @@ public class Logic {
                 }
                 if (visited[currentPos.y][currentPos.x] == CellState.CYCLE) {
                     if (! stepIntoCycle) {
-                        if (visited[currentPos.y][currentPos.x + 1] != CellState.CYCLE && currentPos.x + 1 <= rightMostX) {
+                        if (currentPos.x + 1 <= rightMostX && visited[currentPos.y][currentPos.x + 1] != CellState.CYCLE) {
                             stepIntoCycle = true;
                         }
                     } else {
