@@ -6,12 +6,17 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
+import com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy;
+import com.badlogic.gdx.graphics.g3d.decals.Decal;
+import com.badlogic.gdx.graphics.g3d.decals.DecalBatch;
+import com.badlogic.gdx.graphics.g3d.decals.GroupStrategy;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
@@ -40,13 +45,14 @@ public class View {
     private final ModelInstance rightWallInstance;
     private final ModelInstance backWallInstance;
     private final PerspectiveCamera cam;
+    private final DecalBatch decalBatch;
 
-    private static final float sizeOfBlock = 1 / 6f * 2;
-    private static final float wallHeight = 1f;
+    private float sizeOfBlock = 1 / 6f * 2;
+    private static final float wallHeight = 1.5f;
 
     View() {
-        playerImg = new Texture("badlogic.jpg");
-        boxImg = new Texture("box.png");
+        playerImg = new Texture("char.png");
+        boxImg = new Texture("donwall.png");
         grass = new Texture("grass.png");
         grass.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         wall = new Texture("wall.jpg");
@@ -58,7 +64,7 @@ public class View {
 
         modelBatch = new ModelBatch();
         cam = new PerspectiveCamera(30, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        cam.position.set(0f, 1.0f, 3.5f);
+        cam.position.set(0f, 1.5f, 3.0f);
         cam.lookAt(0, -0.8f, 0);
         cam.far = 300f;
         cam.update();
@@ -104,36 +110,14 @@ public class View {
         leftWallInstance = new ModelInstance(leftWall);
         rightWallInstance = new ModelInstance(rightWall);
         backWallInstance = new ModelInstance(backWall);
+
+        decalBatch = new DecalBatch(10, new CameraGroupStrategy(cam));
     }
 
     public void view(final Logic model) {
+        sizeOfBlock = 1 / (float)model.getFieldWidth() * 2f;
         // start - offset from (0, 0)
 
-//        batch.begin();
-//        model.allThings().forEach(entry -> {
-//            final Logic.Pos lPos = entry.getKey();
-//            final Vector2 pos = logicToScreen(lPos, fieldHeight, start).sub(
-//                    new Vector2(0, sizeOfBlock)
-//            );
-//            final Logic.ThingType ty = entry.getValue();
-//            final Texture img;
-//            switch (ty) {
-//                case PLAYER:
-//                    img = playerImg;
-//                    break;
-//                case BOX:
-//                    img = boxImg;
-//                    break;
-//                default:
-//                    img = null;
-//            }
-//            final Sprite sprite = new Sprite(img, 64, 64);
-//            sprite.setSize(64, 64);
-//            sprite.setPosition(pos.x, pos.y);
-//
-//            sprite.draw(batch);
-//        });
-//        batch.end();
         Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
         modelBatch.begin(cam);
@@ -165,6 +149,42 @@ public class View {
         }
 
         modelBatch.end();
+
+//        Gdx.gl.glEnable(Gdx.gl20.GL_BLEND);
+//        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+
+        model.allThings().forEach(entry -> {
+            final Logic.Pos lPos = entry.getKey();
+            Vector3 pos = logicToDisplay(lPos).add(sizeOfBlock / 2f, -1f + sizeOfBlock / 2f, sizeOfBlock / 2f);
+            final Logic.ThingType ty = entry.getValue();
+            final Texture img;
+            switch (ty) {
+                case PLAYER:
+                    img = playerImg;
+                    break;
+                case BOX:
+                    pos = pos.add(0, 0, sizeOfBlock / 2f);
+                    img = boxImg;
+                    break;
+                default:
+                    img = null;
+            }
+            final Decal dec = Decal.newDecal(sizeOfBlock, sizeOfBlock, new TextureRegion(img));
+            if (ty == Logic.ThingType.PLAYER) {
+                dec.setScale(2f);
+                pos = pos.add(0, sizeOfBlock / 2f, sizeOfBlock / 2f - 0.1f);
+            } else {
+                dec.setScaleY(1.5f);
+                pos = pos.add(0, sizeOfBlock / 4f, 0);
+            }
+            dec.setBlending(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+
+            dec.setPosition(pos);
+//            dec.lookAt(cam.position, cam.up);
+
+            decalBatch.add(dec);
+        });
+        decalBatch.flush();
     }
 
     private void DrawDebugLine(Vector2 start, Vector2 end) {
@@ -192,8 +212,7 @@ public class View {
         for (int y = 0; y < logic.getFieldHeight(); y++) {
             for (int x = 0; x < logic.getFieldWidth(); x++) {
                 Vector3 currentCellPos = logicToDisplay(
-                        new Logic.Pos(x, y),
-                        fieldHeight
+                        new Logic.Pos(x, y)
                 );
 
                 final ModelInstance tileInstance = new ModelInstance(tileModel);
@@ -213,8 +232,7 @@ public class View {
 
     // LibGDX goes from bottom left to top right
     public Vector3 logicToDisplay(
-            final Logic.Pos lPos,
-            final int fieldHeight
+            final Logic.Pos lPos
     ) {
         return new Vector3(
                 (float)lPos.x,
