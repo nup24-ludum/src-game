@@ -1,7 +1,5 @@
 package com.mygdx.game;
 
-import jdk.javadoc.internal.doclets.toolkit.util.Utils;
-
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -72,7 +70,7 @@ public class Logic {
             this.y = y;
         }
 
-        Pos applyDir(final MoveDirection dir) {
+        public Pos applyDir(final MoveDirection dir) {
             switch (dir) {
                 case LEFT:  return new Pos(x - 1, y);
                 case RIGHT: return new Pos(x + 1, y);

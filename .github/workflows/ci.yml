@@ -7,7 +7,7 @@ on:
         branches: [main]
 
 jobs:
-    assemble:
+    autobuild:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout code
@@ -16,3 +16,10 @@ jobs:
               run: "./gradlew core:assemble"
             - name: Assemble desktop
               run: "./gradlew desktop:assemble"
+    unittests:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+            - name: Assemble core
+              run: "./gradlew core:test"
