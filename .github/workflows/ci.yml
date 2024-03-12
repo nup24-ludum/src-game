@@ -12,5 +12,7 @@ jobs:
         steps:
             - name: Checkout code
               uses: actions/checkout@v4
-            - name: Invoke gradle
+            - name: Assemble core
+              run: "./gradlew core:assemble"
+            - name: Assemble desktop
               run: "./gradlew desktop:assemble"
