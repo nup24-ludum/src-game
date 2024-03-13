@@ -162,6 +162,9 @@ public class Logic {
         if (moveThing(playerPos, dir)) {
             playerPos = playerPos.applyDir(dir);
             history.add(new Pair(playerPos, dir));
+            if (getCell(playerPos.x, playerPos.y).type == CellType.TREASURE) {
+                applyShadowToField();
+            }
         }
     }
 
