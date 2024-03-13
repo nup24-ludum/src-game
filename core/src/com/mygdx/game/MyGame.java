@@ -103,6 +103,11 @@ public class MyGame extends ApplicationAdapter {
                     field[i][j] = Logic.CellType.ENTRANCE;
                     continue;
                 }
+                if (i == 7 && j == 6) {
+                    field[i][j] = Logic.CellType.TREASURE;
+                    continue;
+                }
+
                 if (i == 0 && j == 0) {
                     field[i][j] = Logic.CellType.FLOOR;
                     continue;
