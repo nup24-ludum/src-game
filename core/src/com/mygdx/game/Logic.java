@@ -126,16 +126,20 @@ public class Logic {
     private final int fieldHeight;
     private final List<Pair> history;
 
-    public Logic(int fieldWidth, int fieldHeight, Cell[][] field, Map<Pos, ThingType> thingTypeMap) {
+    public Logic(final CellType[][] field, final Map<Pos, ThingType> thingTypeMap) {
         // TODO make this constructor argument
-        this.playerPos = new Pos(0, 0);
-        this.fieldWidth = fieldWidth;
-        this.fieldHeight = fieldHeight;
-        // test load field
-
-        this.field = field;
-        this.thingTypeMap = thingTypeMap;
         history = new ArrayList<>();
+        playerPos = new Pos(0, 0);
+        fieldHeight = field.length;
+        fieldWidth = field[0].length;
+        this.thingTypeMap = thingTypeMap;
+
+        this.field = new Cell[fieldHeight][fieldWidth];
+        for (int y = 0; y < fieldHeight; y++) {
+            for (int x = 0; x < fieldWidth; x++) {
+                this.field[y][x] = new Cell(field[y][x], false);
+            }
+        }
     }
 
     public Collection<Pair> getHistory() {

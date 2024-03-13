@@ -8,14 +8,12 @@ import java.util.Map;
 public class MyGame extends ApplicationAdapter {
     private View view;
     private Logic logic;
-    private final int fieldWidth = 8;
-    private final int fieldHeight = 8;
 
     private Map<Logic.Pos, Logic.ThingType> thingTypeMap;
 
     @Override
     public void create() {
-        logic = new Logic(fieldWidth, fieldHeight, loadField(), thingTypeMap);
+        logic = new Logic(loadField(), thingTypeMap);
         view = new View();
 
         InputProcessor inputProcessor = new InputProcessor() {
@@ -94,35 +92,37 @@ public class MyGame extends ApplicationAdapter {
     * And then give it to this function.
     * TODO implement this method!
     */
-    public Logic.Cell[][] loadField() {
+    public Logic.CellType[][] loadField() {
         Logic.Pos playerPos = new Logic.Pos(0, 0);
-        Logic.Cell[][] field = new Logic.Cell[fieldHeight][fieldWidth];
+        int fieldWidth = 8;
+        int fieldHeight = 8;
+        Logic.CellType[][] field = new Logic.CellType[fieldHeight][fieldWidth];
         for (int i = 0; i < field.length; i++) {
             for (int j = 0; j < field[i].length; j++) {
                 if (i == 0 && j == 0) {
-                    field[i][j] = new Logic.Cell(Logic.CellType.FLOOR, false);
+                    field[i][j] = Logic.CellType.FLOOR;
                     continue;
                 }
                 if (i == 1 && j == 0) {
-                    field[i][j] = new Logic.Cell(Logic.CellType.FLOOR, false);
+                    field[i][j] = Logic.CellType.FLOOR;
                     continue;
                 }
                 if (i == 0 || i == field.length - 1 || j == 0) {
-                    field[i][j] = new Logic.Cell(Logic.CellType.WALL, false);
+                    field[i][j] = Logic.CellType.WALL;
                     continue;
                 }
-                field[i][j] = new Logic.Cell(Logic.CellType.FLOOR, false);
+                field[i][j] = Logic.CellType.FLOOR;
             }
         }
-        System.out.println("Field dump:");
-        for (int y = 0; y < fieldHeight; y++) {
-            for (int x = 0; x < fieldWidth; x++) {
-                System.out.print(field[y][x].toShortString());
-            }
-            System.out.print("\n");
-        }
-        System.out.println("New game field os size (" + fieldWidth + ", " + fieldHeight + ")");
-        System.out.println("Player is at " + playerPos);
+//        System.out.println("Field dump:");
+//        for (int y = 0; y < fieldHeight; y++) {
+//            for (int x = 0; x < fieldWidth; x++) {
+//                System.out.print(field[y][x].toShortString());
+//            }
+//            System.out.print("\n");
+//        }
+//        System.out.println("New game field os size (" + fieldWidth + ", " + fieldHeight + ")");
+//        System.out.println("Player is at " + playerPos);
         spawnThings(playerPos);
         return field;
     }
