@@ -129,12 +129,7 @@ public class Logic {
     public Logic(final CellType[][] field, final Map<Pos, ThingType> thingTypeMap) {
         // TODO make this constructor argument
         history = new ArrayList<>();
-        playerPos = thingTypeMap.entrySet()
-                .stream()
-                .filter(x -> x.getValue() == ThingType.PLAYER)
-                .map(Map.Entry::getKey)
-                .findFirst()
-                .orElseThrow();
+        playerPos = findPlayerPos(field);
         fieldHeight = field.length;
         fieldWidth = field[0].length;
         this.thingTypeMap = new HashMap<>(thingTypeMap);
@@ -145,6 +140,18 @@ public class Logic {
                 this.field[y][x] = new Cell(field[y][x], false);
             }
         }
+    }
+
+    private Pos findPlayerPos(CellType[][] field) {
+        Pos player = new Pos(0, 0);
+        for (int i = 0; i < field.length; i++){
+            for (int j = 0; j < field[i].length; j++) {
+                if (field[i][j] == CellType.ENTRANCE) {
+                    player = new Pos(j, i);
+                }
+            }
+        }
+        return player;
     }
 
     public Collection<Pair> getHistory() {
