@@ -105,6 +105,10 @@ public class View {
                 toDraw = wall;
                 break;
             }
+            case ENTRANCE: {
+                toDraw = grass;
+                break;
+            }
             default: {
                 toDraw = playerImg;
                 break;
