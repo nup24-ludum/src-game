@@ -37,8 +37,8 @@ public class Logic {
         TREASURE
     }
     public static class Cell {
-        CellType type;
-        boolean hasShadow;
+        public CellType type;
+        public boolean hasShadow;
 
         Cell (CellType type, boolean hasShadow) {
             this.type = type;
