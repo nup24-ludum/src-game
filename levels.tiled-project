@@ -1,0 +1,23 @@
+{
+    "automappingRulesFile": "",
+    "commands": [
+        {
+            "arguments": "desktop:run --args=\"--map %mapfile\"",
+            "command": "gradle.bat",
+            "enabled": true,
+            "name": "run level",
+            "saveBeforeExecute": true,
+            "shortcut": "F5",
+            "showOutput": true,
+            "workingDirectory": "%projectpath"
+        }
+    ],
+    "extensionsPath": "extensions",
+    "folders": [
+        "."
+    ],
+    "properties": [
+    ],
+    "propertyTypes": [
+    ]
+}
