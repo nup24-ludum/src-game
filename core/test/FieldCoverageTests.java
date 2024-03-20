@@ -206,5 +206,35 @@ public class FieldCoverageTests {
                         oooooooo
                         """);
     }
+    /* move history for test below
+    * s x x x
+    * x X X x
+    * x _ _ x
+    * x x x x
+    */
+    @Test
+    public void testCoverNotValidCircle() {
+        tryMoves(4, 4,
+                new Logic.Pos(0, 0),
+                "RRDLURR",
+                """
+                        oxxo
+                        oxxo
+                        oooo
+                        oooo
+                        """);
+    }
+    @Test
+    public void testCoverNotValidCircleInCircle() {
+        tryMoves(4, 4,
+                new Logic.Pos(0, 0),
+                "RRDLURRDDDLLLUUURRR",
+                """
+                        oooo
+                        oxxo
+                        oooo
+                        oooo
+                        """);
+    }
 
 }
