@@ -125,5 +125,86 @@ public class FieldCoverageTests {
                         """
         );
     }
+    @Test
+    public void testCoverSimpleCircle() {
+        tryMoves(
+                8, 7,
+                new Logic.Pos(1, 1),
+                "RRRDDLLUUU",
+                """
+                        oooooooo
+                        oooooooo
+                        oooooooo
+                        oooooooo
+                        oooooooo
+                        oooooooo
+                        oooooooo
+                        """
+        );
+    }
+    @Test
+    public void testLongDistance() {
+        tryMoves(
+                8, 7,
+                new Logic.Pos(0, 0),
+                "RRRRRRRDDDDDDLLLLLLLUUUUURRRRRRDDDLLLL",
+                """
+                        oxxxxxxx
+                        xxxxxxxx
+                        xoooooxx
+                        xoooooxx
+                        xooxxxxx
+                        xoooooox
+                        xxxxxxxx
+                        """
+        );
+    }
+    @Test
+    public void testCoverTwoCircles() {
+        tryMoves(8, 8,
+                new Logic.Pos(0, 0),
+                "RRRDDLLUURRDDDRRDDLLUUR",
+                """
+                        oooooooo
+                        oooooooo
+                        oooooooo
+                        oooooooo
+                        oooooooo
+                        oooooooo
+                        oooooooo
+                        oooooooo
+                        """
+                );
+    }
+
+    @Test
+    public void testSomeDiffFieldSize() {
+        tryMoves(8, 4,
+                new Logic.Pos(1, 1),
+                "RRDD",
+                """
+                        oooooooo
+                        ooxxoooo
+                        oooxoooo
+                        oooooooo
+                        """);
+    }
+
+    @Test
+    public void testCoverHugeCircle() {
+        tryMoves(8, 8,
+                new Logic.Pos(0 ,0),
+                "RRRRRRRDDDDDDDLLLLLLLUUUUUUURR",
+                """
+                        oooooooo
+                        oooooooo
+                        oooooooo
+                        oooooooo
+                        oooooooo
+                        oooooooo
+                        oooooooo
+                        oooooooo
+                        """);
+    }
 
 }
