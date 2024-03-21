@@ -52,7 +52,7 @@ public class View {
 
     View() {
         playerImg = new Texture("char.png");
-        boxImg = new Texture("donwall.png");
+        boxImg = new Texture("box.png");
         grass = new Texture("grass.png");
         grass.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         wall = new Texture("wall.jpg");
