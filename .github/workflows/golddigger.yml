@@ -1,0 +1,25 @@
+name: Main
+
+on:
+  milestone:
+    types: [closed]
+
+jobs:
+  tag:
+    name: Tag latest gold commit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Create Release Notes
+        uses: docker://decathlon/release-notes-generator-action:2.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OUTPUT_FOLDER: tmp_relnotes
+          USE_MILESTONE_TITLE: "true"
+      - name: Create PR to gold
+        uses: peter-evans/create-pull-request@v6
+        with:
+          base: gold
+          branch: main
+          body-path: tmp_relnotes/release_file.md
