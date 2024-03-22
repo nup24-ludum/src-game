@@ -16,10 +16,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OUTPUT_FOLDER: tmp_relnotes
-          USE_MILESTONE_TITLE: "true"
+          FILENAME: release
       - name: Create PR to gold
         uses: peter-evans/create-pull-request@v6
         with:
-          base: gold
           branch: main
+          base: gold
           body-path: tmp_relnotes/release_file.md
