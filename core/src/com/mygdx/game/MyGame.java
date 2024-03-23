@@ -121,36 +121,38 @@ public class MyGame extends ApplicationAdapter {
     * TODO implement this method!
     */
     public Logic.CellType[][] loadField() {
-        Logic.Pos playerPos = new Logic.Pos(0, 0);
-        int fieldWidth = 8;
-        int fieldHeight = 8;
+//        Logic.Pos playerPos = new Logic.Pos(0, 0);
+        int fieldWidth = 6;
+        int fieldHeight = 6;
         Logic.CellType[][] field = new Logic.CellType[fieldHeight][fieldWidth];
         for (int i = 0; i < field.length; i++) {
             for (int j = 0; j < field[i].length; j++) {
-                if (i == 2 && j == 4) {
-                    field[i][j] = Logic.CellType.ENTRANCE;
-                    continue;
-                }
-                if (i == 5 && j == 6) {
-                    field[i][j] = Logic.CellType.TREASURE;
-                    continue;
-                }
-
-                if (i == 0 && j == 0) {
-                    field[i][j] = Logic.CellType.FLOOR;
-                    continue;
-                }
-                if (i == 1 && j == 0) {
-                    field[i][j] = Logic.CellType.FLOOR;
-                    continue;
-                }
-                if (i == 0 || i == field.length - 1 || j == 0) {
-                    field[i][j] = Logic.CellType.WALL;
-                    continue;
-                }
+//                if (i == 2 && j == 4) {
+//                    field[i][j] = Logic.CellType.ENTRANCE;
+//                    continue;
+//                }
+//                if (i == 7 && j == 6) {
+//                    field[i][j] = Logic.CellType.TREASURE;
+//                    continue;
+//                }
+//
+//                if (i == 0 && j == 0) {
+//                    field[i][j] = Logic.CellType.FLOOR;
+//                    continue;
+//                }
+//                if (i == 1 && j == 0) {
+//                    field[i][j] = Logic.CellType.FLOOR;
+//                    continue;
+//                }
+//                if (i == 0 || i == field.length - 1 || j == 0) {
+//                    field[i][j] = Logic.CellType.WALL;
+//                    continue;
+//                }
                 field[i][j] = Logic.CellType.FLOOR;
             }
         }
+
+        field[0][0] = Logic.CellType.ENTRANCE;
 //        System.out.println("Field dump:");
 //        for (int y = 0; y < fieldHeight; y++) {
 //            for (int x = 0; x < fieldWidth; x++) {
@@ -160,22 +162,22 @@ public class MyGame extends ApplicationAdapter {
 //        }
 //        System.out.println("New game field os size (" + fieldWidth + ", " + fieldHeight + ")");
 //        System.out.println("Player is at " + playerPos);
-        for (int i = 0; i < field.length; i++) {
-            for (int j = 0; j < field[i].length; j++) {
-                if (field[i][j] == Logic.CellType.ENTRANCE) {
-                    playerPos = new Logic.Pos(j, i);
-                }
-            }
-        }
+//        for (int i = 0; i < field.length; i++) {
+//            for (int j = 0; j < field[i].length; j++) {
+//                if (field[i][j] == Logic.CellType.ENTRANCE) {
+//                    playerPos = new Logic.Pos(j, i);
+//                }
+//            }
+//        }
 
-        spawnThings(playerPos);
+        spawnThings();
         return field;
     }
     //TODO all constants are hardcoded - fix!!!
     // TODO make this method depending from loaded field!
-    private void spawnThings(Logic.Pos playerPos) {
+    private void spawnThings() {
         this.thingTypeMap = new HashMap<>();
-        thingTypeMap.put(playerPos, Logic.ThingType.PLAYER);
+//        thingTypeMap.put(playerPos, Logic.ThingType.PLAYER);
         thingTypeMap.put(new Logic.Pos(1, 1), Logic.ThingType.BOX);
         thingTypeMap.put(new Logic.Pos(3, 3), Logic.ThingType.BOX);
     }
