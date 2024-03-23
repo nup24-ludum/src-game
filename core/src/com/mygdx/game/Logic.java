@@ -138,6 +138,7 @@ public class Logic {
                 .filter(x -> x.getValue() != ThingType.PLAYER)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
         );
+        this.thingTypeMap.put(playerPos, ThingType.PLAYER);
 
         this.field = new Cell[fieldHeight][fieldWidth];
         for (int y = 0; y < fieldHeight; y++) {
