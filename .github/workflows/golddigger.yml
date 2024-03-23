@@ -1,4 +1,9 @@
-name: Main
+name: Gold Digger
+
+permissions:
+  contents: read
+  issues: read
+  pull-requests: write
 
 on:
   milestone:
@@ -12,14 +17,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Create Release Notes
-        uses: docker://decathlon/release-notes-generator-action:2.0.1
+        uses: Decathlon/release-notes-generator-action@v3.1.6
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          OUTPUT_FOLDER: tmp_relnotes
           FILENAME: release
       - name: Create PR to gold
-        uses: peter-evans/create-pull-request@v6
-        with:
-          branch: main
-          base: gold
-          body-path: tmp_relnotes/release_file.md
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr create -B gold -H main --title 'New deploy' --body-file release.md
