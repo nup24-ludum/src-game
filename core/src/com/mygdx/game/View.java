@@ -19,7 +19,6 @@ import com.badlogic.gdx.graphics.g3d.decals.Decal;
 import com.badlogic.gdx.graphics.g3d.decals.DecalBatch;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 
 public class View {
@@ -45,14 +44,15 @@ public class View {
     private final PerspectiveCamera cam;
     private final DecalBatch decalBatch;
 
-    private float sizeOfBlock = 1 / 6f * 2;
+    private static float sizeOfBlock = 1 / 10f * 2;
     private static final float wallHeight = 1.5f;
 
     View() {
         playerImg = new Texture("char.png");
         boxImg = new Texture("box.png");
         grass = new Texture("grass.png");
-        grass.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+//        grass = new Texture("boxy.png");
+//        grass.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         wall = new Texture("wall.jpg");
         debugRenderer =  new ShapeRenderer();
         batch = new SpriteBatch();
@@ -113,24 +113,21 @@ public class View {
     }
 
     public void view(final Logic model) {
-        sizeOfBlock = 1 / (float)model.getFieldWidth() * 2f;
         // start - offset from (0, 0)
 
         Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
         modelBatch.begin(cam);
-        modelBatch.render(leftWallInstance);
-        modelBatch.render(rightWallInstance);
-        modelBatch.render(backWallInstance);
+//        modelBatch.render(leftWallInstance);
+//        modelBatch.render(rightWallInstance);
+//        modelBatch.render(backWallInstance);
 
-        Vector2 start = new Vector2(0, 0);
-        int fieldWidth = model.getFieldWidth();
-        int fieldHeight = model.getFieldHeight();
         Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
-
-        drawField(fieldWidth, fieldHeight, start, model, fieldHeight);
-        for (final Logic.Pair pair : model.getHistory()) {
+        
+        drawField(model);
+        
+	for (final Logic.Pair pair : model.getHistory()) {
             // pair contains an old pos.
             final Logic.Pos t = pair.pos.applyDir(pair.dir);
             final Logic.Pos oldPos = new Logic.Pos(
@@ -191,7 +188,7 @@ public class View {
         Gdx.gl.glLineWidth(1);
     }
 
-    private void drawField(int width, int height, Vector2 start, final Logic logic, int fieldHeight) {
+    private void drawField(final Logic logic) {
         for (int y = 0; y < logic.getFieldHeight(); y++) {
             for (int x = 0; x < logic.getFieldWidth(); x++) {
                 Vector3 currentCellPos = logicToDisplay(

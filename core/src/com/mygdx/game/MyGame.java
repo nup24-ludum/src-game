@@ -122,8 +122,8 @@ public class MyGame extends ApplicationAdapter {
     */
     public Logic.CellType[][] loadField() {
 //        Logic.Pos playerPos = new Logic.Pos(0, 0);
-        int fieldWidth = 6;
-        int fieldHeight = 6;
+        int fieldWidth = 10;
+        int fieldHeight = 10;
         Logic.CellType[][] field = new Logic.CellType[fieldHeight][fieldWidth];
         for (int i = 0; i < field.length; i++) {
             for (int j = 0; j < field[i].length; j++) {

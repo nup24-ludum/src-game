@@ -9,6 +9,10 @@ public class DesktopLauncher {
 		Lwjgl3ApplicationConfiguration config = new Lwjgl3ApplicationConfiguration();
 		config.setForegroundFPS(60);
 		config.setTitle("test_gamedev_proj");
+		config.setResizable(false);
+		// FIXME these numbers were pulled out randomly just to not have a small window
+		config.setWindowedMode(1800, 960);
+
 		new Lwjgl3Application(new MyGame(), config);
 	} 
 }
