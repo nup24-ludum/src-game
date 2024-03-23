@@ -19,5 +19,18 @@
     "properties": [
     ],
     "propertyTypes": [
+        {
+            "id": 1,
+            "name": "TileTypeEnum",
+            "storageType": "string",
+            "type": "enum",
+            "values": [
+                "WALL",
+                "FLOOR",
+                "DOOR",
+                "TREASURE"
+            ],
+            "valuesAsFlags": false
+        }
     ]
 }
