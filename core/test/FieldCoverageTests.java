@@ -99,10 +99,11 @@ public class FieldCoverageTests {
         Assertions.assertNotEquals(fieldHeight, 0);
         Assertions.assertNotEquals(fieldWidth, 0);
 
-        final Logic logic = new Logic(
-                genEmptyField(fieldWidth, fieldHeight),
-                Map.of(playerPos, Logic.ThingType.PLAYER)
-        );
+        // FIXME we rely on correctness of entrance tiles. Does not seems good
+        final Logic.CellType[][] field = genEmptyField(fieldWidth, fieldHeight);
+        field[playerPos.y][playerPos.x] = Logic.CellType.ENTRANCE;
+
+        final Logic logic = new Logic(field, Map.of());
 
         tryMoves(logic, movesCode, shadowExpectation);
     }
