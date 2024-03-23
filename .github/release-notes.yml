@@ -1,6 +1,6 @@
 changelog:
   sections:
-  - title: "Features"
+  - title: ":hammer: Features"
     labels: ["feature"]
-  - title: "Bugs"
+  - title: ":bug: Bugs"
     labels: ["bug"]

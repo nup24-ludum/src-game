@@ -1,0 +1,29 @@
+on:
+  pull_request:
+    branches:
+      - gold
+    types: [closed]
+
+jobs:
+  create-release:
+    name: Release the merge
+    if: ${{ github.event.pull_request.merged }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+            ref: 'gold'
+      - name: Push Git Tag
+        run: |
+              git config user.name "GitHub Actions"
+              git config user.email "github-actions@users.noreply.github.com"
+              git tag ${{ github.event.pull_request.title }}
+              git push origin --tags
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+            tag_name: ${{ github.event.pull_request.title }}
+            name: ${{ github.event.pull_request.title }}
+            body: ${{ github.event.pull_request.body }}
+            make_latest: true
