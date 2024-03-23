@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.VertexAttributes.Usage;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.g3d.Material;
@@ -16,13 +17,10 @@ import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy;
 import com.badlogic.gdx.graphics.g3d.decals.Decal;
 import com.badlogic.gdx.graphics.g3d.decals.DecalBatch;
-import com.badlogic.gdx.graphics.g3d.decals.GroupStrategy;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
-import com.mygdx.game.Logic.CellType;
-import com.badlogic.gdx.graphics.VertexAttributes.Usage;
 
 public class View {
     private final ShapeRenderer debugRenderer;
@@ -150,9 +148,6 @@ public class View {
 
         modelBatch.end();
 
-//        Gdx.gl.glEnable(Gdx.gl20.GL_BLEND);
-//        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
-
         model.allThings().forEach(entry -> {
             final Logic.Pos lPos = entry.getKey();
             Vector3 pos = logicToDisplay(lPos).add(sizeOfBlock / 2f, -1f + sizeOfBlock / 2f, sizeOfBlock / 2f);
@@ -196,19 +191,7 @@ public class View {
         Gdx.gl.glLineWidth(1);
     }
 
-    private void drawTexture(CellType type, Vector2 pos) {
-        final Texture toDraw = switch (type) {
-            case FLOOR ->  grass;
-            case WALL -> wall;
-            case TREASURE -> chest;
-            case ENTRANCE -> badLogic64;
-        };
-        batch.begin();
-        batch.draw(toDraw, pos.x, pos.y);
-        batch.end();
-    }
-
-    private void drawField( Vector2 start, final Logic logic, int fieldHeight) {
+    private void drawField(int width, int height, Vector2 start, final Logic logic, int fieldHeight) {
         for (int y = 0; y < logic.getFieldHeight(); y++) {
             for (int x = 0; x < logic.getFieldWidth(); x++) {
                 Vector3 currentCellPos = logicToDisplay(
@@ -218,19 +201,10 @@ public class View {
                 final ModelInstance tileInstance = new ModelInstance(tileModel);
                 tileInstance.transform.translate(currentCellPos);
                 modelBatch.render(tileInstance);
-//                drawTexture(logic.getCell(x, y).type, currentCellPos);
             }
         }
     }
 
-    private void drawShadow(Vector2 pos) {
-        batch.begin();
-        batch.draw(shadow, pos.x, pos.y);
-        batch.end();
-    }
-
-
-    // LibGDX goes from bottom left to top right
     public Vector3 logicToDisplay(
             final Logic.Pos lPos
     ) {
