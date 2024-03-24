@@ -46,7 +46,7 @@ public class View {
     private final DecalBatch decalBatch;
 
     private static float sizeOfBlock = 1 / 10f * 2;
-    private static final float wallHeight = 1.5f;
+    private static final float wallHeight = 0.8f;
 
     View() {
         playerImg = new Texture("char.png");
@@ -55,7 +55,7 @@ public class View {
         grass = IntStream.range(1, 7)
                 .mapToObj(x -> new Texture("grass" + x + ".png"))
                 .toArray(Texture[]::new);
-        wall = new Texture("wall.jpg");
+        wall = new Texture("wall.png");
         debugRenderer =  new ShapeRenderer();
         batch = new SpriteBatch();
         shadow = new Texture("shadow-2.png");
@@ -77,8 +77,11 @@ public class View {
                 -1, -1 + wallHeight, -1,
                 -1, -1 + wallHeight, 1,
                 0, 0, -1,
-                new Material(ColorAttribute.createDiffuse(new Color(0, 0.5f, 0, 1))),
-                Usage.Position | Usage.Normal
+                new Material(
+                        TextureAttribute.createDiffuse(wall),
+                        ColorAttribute.createDiffuse(new Color(1, 1, 1, 1))
+                ),
+                Usage.Position | Usage.Normal | Usage.TextureCoordinates
         );
         rightWall = modelBuilder.createRect(
                 1, -1, -1,
@@ -86,8 +89,11 @@ public class View {
                 1, -1 + wallHeight, 1,
                 1, -1 + wallHeight, -1,
                 0, 0, -1,
-                new Material(ColorAttribute.createDiffuse(new Color(0, 0.5f, 0, 1))),
-                Usage.Position | Usage.Normal
+                new Material(
+                        TextureAttribute.createDiffuse(wall),
+                        ColorAttribute.createDiffuse(new Color(1, 1, 1, 1))
+                ),
+                Usage.Position | Usage.Normal | Usage.TextureCoordinates
         );
         backWall = modelBuilder.createRect(
                 -1, -1, -1,
@@ -95,8 +101,13 @@ public class View {
                 1, -1 + wallHeight, -1,
                 -1, -1 + wallHeight, -1,
                 0, 0, -1,
-                new Material(ColorAttribute.createDiffuse(new Color(0, 0.4f, 0, 1))),
-                Usage.Position | Usage.Normal
+                new Material(
+                        TextureAttribute.createDiffuse(wall),
+//                        ColorAttribute.createDiffuse(new Color(0.6f, 0.6f, 0.6f, 1))
+                        ColorAttribute.createDiffuse(new Color(1f, 1f, 1f, 1))
+
+                ),
+                Usage.Position | Usage.Normal | Usage.TextureCoordinates
         );
 
         leftWallInstance = new ModelInstance(leftWall);
@@ -111,11 +122,12 @@ public class View {
 
         Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
-//        modelBatch.begin(cam);
-//        modelBatch.render(leftWallInstance);
-//        modelBatch.render(rightWallInstance);
-//        modelBatch.render(backWallInstance);
-//        modelBatch.end();
+
+        modelBatch.begin(cam);
+        modelBatch.render(leftWallInstance);
+        modelBatch.render(rightWallInstance);
+        modelBatch.render(backWallInstance);
+        modelBatch.end();
 
         drawField(model);
         
