@@ -21,13 +21,15 @@ import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector3;
 
+import java.util.stream.IntStream;
+
 public class View {
     private final ShapeRenderer debugRenderer;
     private final SpriteBatch batch;
     private final Texture playerImg;
     private final Texture badLogic64;
     private final Texture boxImg;
-    private final Texture grass;
+    private final Texture[] grass;
     private final Texture wall;
     private final Texture shadow;
     private final Texture chest;
@@ -37,7 +39,6 @@ public class View {
     private final Model leftWall;
     private final Model rightWall;
     private final Model backWall;
-    private final Model tileModel;
     private final ModelInstance leftWallInstance;
     private final ModelInstance rightWallInstance;
     private final ModelInstance backWallInstance;
@@ -50,9 +51,10 @@ public class View {
     View() {
         playerImg = new Texture("char.png");
         boxImg = new Texture("box.png");
-//        grass = new Texture("grass.png");
-        grass = new Texture("boxy.png");
-//        grass.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+//        grass = new Texture[] { new Texture("boxy.png") };
+        grass = IntStream.range(1, 7)
+                .mapToObj(x -> new Texture("grass" + x + ".png"))
+                .toArray(Texture[]::new);
         wall = new Texture("wall.jpg");
         debugRenderer =  new ShapeRenderer();
         batch = new SpriteBatch();
@@ -96,15 +98,7 @@ public class View {
                 new Material(ColorAttribute.createDiffuse(new Color(0, 0.4f, 0, 1))),
                 Usage.Position | Usage.Normal
         );
-        tileModel = modelBuilder.createRect(
-            0, -1, sizeOfBlock,
-            sizeOfBlock, -1, sizeOfBlock,
-            sizeOfBlock, -1, 0,
-            0, -1, 0,
-            0, 0, -1,
-            new Material(TextureAttribute.createDiffuse(grass)),
-            Usage.Position | Usage.Normal | Usage.TextureCoordinates
-        );
+
         leftWallInstance = new ModelInstance(leftWall);
         rightWallInstance = new ModelInstance(rightWall);
         backWallInstance = new ModelInstance(backWall);
@@ -160,7 +154,7 @@ public class View {
             final Decal dec = Decal.newDecal(sizeOfBlock, sizeOfBlock, new TextureRegion(img));
             if (ty == Logic.ThingType.PLAYER) {
                 dec.setScale(2f);
-                pos = pos.add(0, sizeOfBlock / 2f, sizeOfBlock / 2f - 0.1f);
+                pos = pos.add(0, sizeOfBlock / 2f, sizeOfBlock / 2f - 0.08f);
             } else {
                 dec.setScaleY(1.5f);
                 pos = pos.add(0, sizeOfBlock / 4f, 0);
@@ -191,7 +185,8 @@ public class View {
                         new Logic.Pos(x, y)
                 ).add(sizeOfBlock / 2, -1, sizeOfBlock / 2);
 
-                final Decal dec = Decal.newDecal(sizeOfBlock, sizeOfBlock, new TextureRegion(grass));
+                int idx = ((x << 16) ^ y) % grass.length;
+                final Decal dec = Decal.newDecal(sizeOfBlock, sizeOfBlock, new TextureRegion(grass[idx]));
                 dec.rotateX(90);
                 dec.setPosition(currentCellPos);
                 decalBatch.add(dec);
@@ -217,6 +212,5 @@ public class View {
         leftWall.dispose();
         rightWall.dispose();
         backWall.dispose();
-        tileModel.dispose();
     }
 }
