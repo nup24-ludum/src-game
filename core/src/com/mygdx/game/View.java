@@ -50,8 +50,8 @@ public class View {
     View() {
         playerImg = new Texture("char.png");
         boxImg = new Texture("box.png");
-        grass = new Texture("grass.png");
-//        grass = new Texture("boxy.png");
+//        grass = new Texture("grass.png");
+        grass = new Texture("boxy.png");
 //        grass.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         wall = new Texture("wall.jpg");
         debugRenderer =  new ShapeRenderer();
@@ -117,14 +117,12 @@ public class View {
 
         Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
-        modelBatch.begin(cam);
+//        modelBatch.begin(cam);
 //        modelBatch.render(leftWallInstance);
 //        modelBatch.render(rightWallInstance);
 //        modelBatch.render(backWallInstance);
+//        modelBatch.end();
 
-        Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
-        
         drawField(model);
         
 	for (final Logic.Pair pair : model.getHistory()) {
@@ -142,8 +140,6 @@ public class View {
 
             DrawDebugLine(beg, end);
         }
-
-        modelBatch.end();
 
         model.allThings().forEach(entry -> {
             final Logic.Pos lPos = entry.getKey();
@@ -193,11 +189,12 @@ public class View {
             for (int x = 0; x < logic.getFieldWidth(); x++) {
                 Vector3 currentCellPos = logicToDisplay(
                         new Logic.Pos(x, y)
-                );
+                ).add(sizeOfBlock / 2, -1, sizeOfBlock / 2);
 
-                final ModelInstance tileInstance = new ModelInstance(tileModel);
-                tileInstance.transform.translate(currentCellPos);
-                modelBatch.render(tileInstance);
+                final Decal dec = Decal.newDecal(sizeOfBlock, sizeOfBlock, new TextureRegion(grass));
+                dec.rotateX(90);
+                dec.setPosition(currentCellPos);
+                decalBatch.add(dec);
             }
         }
     }
