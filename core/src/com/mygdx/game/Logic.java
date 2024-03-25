@@ -1,6 +1,7 @@
 package com.mygdx.game;
 
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Logic {
@@ -127,12 +128,17 @@ public class Logic {
     private final List<Pair> history;
 
     public Logic(final CellType[][] field, final Map<Pos, ThingType> thingTypeMap) {
-        // TODO make this constructor argument
         history = new ArrayList<>();
         playerPos = findPlayerPos(field);
         fieldHeight = field.length;
         fieldWidth = field[0].length;
-        this.thingTypeMap = thingTypeMap;
+
+        this.thingTypeMap = new HashMap<>(thingTypeMap
+                .entrySet().stream()
+                .filter(x -> x.getValue() != ThingType.PLAYER)
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
+        );
+        this.thingTypeMap.put(playerPos, ThingType.PLAYER);
 
         this.field = new Cell[fieldHeight][fieldWidth];
         for (int y = 0; y < fieldHeight; y++) {
@@ -188,7 +194,7 @@ public class Logic {
                     curPosToFindCycle = history.get(j).pos;
                     visited[curPosToFindCycle.y][curPosToFindCycle.x] = CellState.CYCLE;
                 }
-                if (! validateCycle(visited, currentCellPos, j)) {
+                if (! validateCycle(visited, currentCellPos, ++j)) {
                     int h = i - 1;
                     Pos curPos;
                     for (; h >= j; h--) {
