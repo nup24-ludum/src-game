@@ -127,6 +127,8 @@ public class Logic {
     private final int fieldHeight;
     private final List<Pair> history;
 
+    private boolean isTreasureStolen; // update this when loading new level
+
     public Logic(final CellType[][] field, final Map<Pos, ThingType> thingTypeMap) {
         history = new ArrayList<>();
         playerPos = findPlayerPos(field);
@@ -146,6 +148,7 @@ public class Logic {
                 this.field[y][x] = new Cell(field[y][x], false);
             }
         }
+        isTreasureStolen = false;
     }
 
     private Pos findPlayerPos(CellType[][] field) {
@@ -168,7 +171,7 @@ public class Logic {
         if (moveThing(playerPos, dir)) {
             playerPos = playerPos.applyDir(dir);
             history.add(new Pair(playerPos, dir));
-            if (getCell(playerPos.x, playerPos.y).type == CellType.TREASURE) {
+            if (getCell(playerPos.x, playerPos.y).type == CellType.TREASURE && ! isTreasureStolen) {
                 applyShadowToField();
             }
         }
@@ -204,6 +207,7 @@ public class Logic {
                     }
                 }
             }
+            isTreasureStolen = true;
         }
         for (Pair record: history) {
             Pos curPos = record.pos;
