@@ -1,6 +1,8 @@
 package com.mygdx.game;
 
 import com.badlogic.gdx.*;
+import com.badlogic.gdx.maps.tiled.TiledMap;
+import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -93,27 +95,31 @@ public class MyGame extends ApplicationAdapter {
     * TODO implement this method!
     */
     public Logic.CellType[][] loadField() {
+        TiledMap map = new TmxMapLoader().load("map1.tmx");
+        System.out.println(map);
+
         Logic.Pos playerPos = new Logic.Pos(0, 0);
         int fieldWidth = 8;
         int fieldHeight = 8;
         Logic.CellType[][] field = new Logic.CellType[fieldHeight][fieldWidth];
-        for (int i = 0; i < field.length; i++) {
-            for (int j = 0; j < field[i].length; j++) {
-                if (i == 0 && j == 0) {
-                    field[i][j] = Logic.CellType.FLOOR;
-                    continue;
-                }
-                if (i == 1 && j == 0) {
-                    field[i][j] = Logic.CellType.FLOOR;
-                    continue;
-                }
-                if (i == 0 || i == field.length - 1 || j == 0) {
-                    field[i][j] = Logic.CellType.WALL;
-                    continue;
-                }
-                field[i][j] = Logic.CellType.FLOOR;
-            }
-        }
+//        for (int i = 0; i < field.length; i++) {
+//            for (int j = 0; j < field[i].length; j++) {
+//                if (i == 0 && j == 0) {
+//                    field[i][j] = Logic.CellType.FLOOR;
+//                    continue;
+//                }
+//                if (i == 1 && j == 0) {
+//                    field[i][j] = Logic.CellType.FLOOR;
+//                    continue;
+//                }
+//                if (i == 0 || i == field.length - 1 || j == 0) {
+//                    field[i][j] = Logic.CellType.WALL;
+//                    continue;
+//                }
+//                field[i][j] = Logic.CellType.FLOOR;
+//            }
+//        }
+
 //        System.out.println("Field dump:");
 //        for (int y = 0; y < fieldHeight; y++) {
 //            for (int x = 0; x < fieldWidth; x++) {
@@ -123,7 +129,9 @@ public class MyGame extends ApplicationAdapter {
 //        }
 //        System.out.println("New game field os size (" + fieldWidth + ", " + fieldHeight + ")");
 //        System.out.println("Player is at " + playerPos);
-        spawnThings(playerPos);
+
+
+//        spawnThings(playerPos);
         return field;
     }
     //TODO all constants are hardcoded - fix!!!

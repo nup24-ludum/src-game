@@ -61,9 +61,14 @@ project(":core") {
         api "com.badlogicgames.box2dlights:box2dlights:$box2DLightsVersion"
         api "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
 
+        testImplementation "com.badlogicgames.gdx:gdx-backend-headless:$gdxVersion"
+        testImplementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
+
         testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
         testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
         testImplementation 'org.junit.platform:junit-platform-launcher:1.8.2'
+        testImplementation 'org.junit.platform:junit-platform-runner:1.8.2'
+        testImplementation 'org.junit.vintage:junit-vintage-engine:5.8.1'
     }
 
     test {
