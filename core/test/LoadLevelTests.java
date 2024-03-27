@@ -12,7 +12,7 @@ public class LoadLevelTests {
     public void testIsCellType() {
         final MyGame game = new MyGame();
 
-        game.loadField();
+        game.loadField("map1.tmx");
 
     }
 }

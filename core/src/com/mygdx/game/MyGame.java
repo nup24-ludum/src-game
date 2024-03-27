@@ -94,44 +94,55 @@ public class MyGame extends ApplicationAdapter {
     * And then give it to this function.
     * TODO implement this method!
     */
-    public Logic.CellType[][] loadField() {
-        TiledMap map = new TmxMapLoader().load("map1.tmx");
-        System.out.println(map);
+
+    public Logic.CellType[][] loadField() { // backwards compatability for now
 
         Logic.Pos playerPos = new Logic.Pos(0, 0);
         int fieldWidth = 8;
         int fieldHeight = 8;
         Logic.CellType[][] field = new Logic.CellType[fieldHeight][fieldWidth];
-//        for (int i = 0; i < field.length; i++) {
-//            for (int j = 0; j < field[i].length; j++) {
-//                if (i == 0 && j == 0) {
-//                    field[i][j] = Logic.CellType.FLOOR;
-//                    continue;
-//                }
-//                if (i == 1 && j == 0) {
-//                    field[i][j] = Logic.CellType.FLOOR;
-//                    continue;
-//                }
-//                if (i == 0 || i == field.length - 1 || j == 0) {
-//                    field[i][j] = Logic.CellType.WALL;
-//                    continue;
-//                }
-//                field[i][j] = Logic.CellType.FLOOR;
-//            }
-//        }
+        for (int i = 0; i < field.length; i++) {
+            for (int j = 0; j < field[i].length; j++) {
+                if (i == 0 && j == 0) {
+                    field[i][j] = Logic.CellType.FLOOR;
+                    continue;
+                }
+                if (i == 1 && j == 0) {
+                    field[i][j] = Logic.CellType.FLOOR;
+                    continue;
+                }
+                if (i == 0 || i == field.length - 1 || j == 0) {
+                    field[i][j] = Logic.CellType.WALL;
+                    continue;
+                }
+                field[i][j] = Logic.CellType.FLOOR;
+            }
+        }
 
-//        System.out.println("Field dump:");
-//        for (int y = 0; y < fieldHeight; y++) {
-//            for (int x = 0; x < fieldWidth; x++) {
-//                System.out.print(field[y][x].toShortString());
-//            }
-//            System.out.print("\n");
-//        }
-//        System.out.println("New game field os size (" + fieldWidth + ", " + fieldHeight + ")");
-//        System.out.println("Player is at " + playerPos);
+        System.out.println("Field dump:");
+        for (int y = 0; y < fieldHeight; y++) {
+            for (int x = 0; x < fieldWidth; x++) {
+                System.out.print(field[y][x].toShortString());
+            }
+            System.out.print("\n");
+        }
+        System.out.println("New game field os size (" + fieldWidth + ", " + fieldHeight + ")");
+        System.out.println("Player is at " + playerPos);
 
 
-//        spawnThings(playerPos);
+        spawnThings(playerPos);
+        return field;
+    }
+    public Logic.CellType[][] loadField(String mapPath) {
+        TiledMap map = new TmxMapLoader().load(mapPath);
+        System.out.println(map);
+
+        // Convert to CellType
+
+        int fieldWidth = 8;
+        int fieldHeight = 8;
+        Logic.CellType[][] field = new Logic.CellType[fieldHeight][fieldWidth];
+
         return field;
     }
     //TODO all constants are hardcoded - fix!!!
