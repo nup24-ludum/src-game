@@ -37,6 +37,7 @@ public class View {
     private final Texture[] grass;
     private final Texture wall;
     private final Texture shadow;
+    private final Texture shadowHand;
     private final Texture chest;
 
     /* Resources for the don't starve look */
@@ -66,6 +67,7 @@ public class View {
         debugRenderer =  new ShapeRenderer();
         batch = new SpriteBatch();
         shadow = new Texture("shadow4.png");
+        shadowHand = new Texture("shadowhand.png");
         chest = new Texture("chest-2.png");
         badLogic64 = new Texture("badlogic64.jpg");
 
@@ -138,7 +140,7 @@ public class View {
                 new Logic.Pos(5, 3),
                 new Logic.Pos(6, 3),
                 new Logic.Pos(6, 4)
-        ), shadow);
+        ), shadow, shadowHand);
         shadowInstance = new ModelInstance(shadowModel);
     }
 
@@ -224,12 +226,18 @@ public class View {
         );
     }
 
-    private static Model buildShadow(final Collection<Logic.Pos> points, final Texture shadow) {
+    private static Model buildShadow(
+            final List<Logic.Pos> points,
+            final Texture shadow,
+            final Texture shadowHand) {
         final ModelBuilder builder = new ModelBuilder();
         builder.begin();
+        final Random rand = new Random();
+        Vector3 prev = logicToDisplay(new Logic.Pos(0, 0))
+                .add(sizeOfBlock / 2, -0.99f, sizeOfBlock / 2);
 
-        final MeshPartBuilder modelBuilder = builder.part(
-                "line",
+        final MeshPartBuilder bodyBuilder = builder.part(
+                "arm",
                 GL20.GL_TRIANGLES,
                 Usage.Position | Usage.TextureCoordinates,
                 new Material(
@@ -239,10 +247,8 @@ public class View {
                 )
         );
 
-        final Random rand = new Random();
-        Vector3 prev = logicToDisplay(new Logic.Pos(0, 0))
-                .add(sizeOfBlock / 2, -0.99f, sizeOfBlock / 2);
-        for (final Logic.Pos pos : points) {
+        for (int i = 0; i < points.size(); i++) {
+            final Logic.Pos pos = points.get(i);
             final Vector3 end = logicToDisplay(pos)
                     .add(sizeOfBlock / 2, -0.99f, sizeOfBlock / 2);
             final Vector3 dir = end.cpy().sub(prev).nor();
@@ -255,20 +261,67 @@ public class View {
                                     (rand.nextBoolean() ? -1 : 1)
                     )));
             final Vector3 off = dir.cpy().scl(sizeOfBlock / 2 * 0.2f);
-            final Vector3 visend = end.cpy().add(ranoff);
+            final Vector3 visend;
+            final float endWidth;
 
-//            modelBuilder.line(prev, end);
-            modelBuilder.rect(
-                    prev.cpy().add(perp.cpy().scl(0.35f)).add(shadowWiggle(rand)),
-                    prev.cpy().sub(perp.cpy().scl(0.35f)).add(shadowWiggle(rand)),
-                    visend.cpy().add(off).sub(perp.cpy().scl(0.45f)).add(shadowWiggle(rand)),
-                    visend.cpy().add(off).add(perp.cpy().scl(0.45f)).add(shadowWiggle(rand)),
+            if (i == points.size() - 1) {
+                endWidth = 0.2f;
+                visend = end.cpy().add(dir.cpy().scl(-sizeOfBlock / 2 * 0.4f));
+            } else {
+                endWidth = 0.45f;
+                visend = end.cpy().add(off).add(ranoff);
+            }
+
+            bodyBuilder.rect(
+                    prev.cpy().add(dir.cpy().scl(-sizeOfBlock / 2 * 0.1f)).add(perp.cpy().scl(0.35f)).add(shadowWiggle(rand)),
+                    prev.cpy().add(dir.cpy().scl(-sizeOfBlock / 2 * 0.1f)).sub(perp.cpy().scl(0.35f)).add(shadowWiggle(rand)),
+                    visend.cpy().sub(perp.cpy().scl(endWidth)).add(shadowWiggle(rand)),
+                    visend.cpy().add(perp.cpy().scl(endWidth)).add(shadowWiggle(rand)),
+//                    prev.cpy().add(perp.cpy().scl(0.55f)).add(shadowWiggle(rand)),
+//                    prev.cpy().sub(perp.cpy().scl(0.55f)).add(shadowWiggle(rand)),
+//                    visend.cpy().add(off).sub(perp.cpy().scl(0.65f)).add(shadowWiggle(rand)),
+//                    visend.cpy().add(off).add(perp.cpy().scl(0.65f)).add(shadowWiggle(rand)),
                     Vector3.Y
             );
 
-//            prev = end;
             prev = visend;
         }
+
+        final MeshPartBuilder handBuilder = builder.part(
+                "hand",
+                GL20.GL_TRIANGLES,
+                Usage.Position | Usage.TextureCoordinates,
+                new Material(
+                        new BlendingAttribute(true, 1),
+                        TextureAttribute.createDiffuse(new TextureRegion(shadowHand))
+                )
+        );
+
+        final Logic.Pos pos = points.get(points.size() - 1);
+        final Vector3 end = logicToDisplay(pos)
+                .add(sizeOfBlock / 2, -0.99f, sizeOfBlock / 2);
+        final Vector3 dir = end.cpy().sub(prev).nor();
+        final Vector3 perpNo = new Vector3(dir.z, 0, -dir.x);
+        final Vector3 perp = new Vector3(dir.z, 0, -dir.x)
+                .scl(sizeOfBlock / 2);
+        final Vector3 ranoff = dir.cpy().scl(0.3f * sizeOfBlock / 2 * rand.nextFloat(0.2f, 1))
+                .add(perpNo.scl( sizeOfBlock / 2 * (
+                        (0.3f * rand.nextFloat(0, 1) + 0.2f) *
+                                (rand.nextBoolean() ? -1 : 1)
+                )));
+        final Vector3 off = dir.cpy().scl(sizeOfBlock / 2 * 0.2f);
+        final Vector3 visend = end.cpy().add(
+                dir.cpy().scl(sizeOfBlock / 2 * 1)
+        );
+        final Vector3 prevOff = dir.cpy().scl(-sizeOfBlock / 2 * 0.4f);
+
+        bodyBuilder.rect(
+                prev.cpy().add(prevOff).add(perp.cpy().scl(0.8f)),
+                prev.cpy().add(prevOff).sub(perp.cpy().scl(0.8f)),
+                visend.cpy().add(off).sub(perp.cpy().scl(0.9f)),
+                visend.cpy().add(off).add(perp.cpy().scl(0.9f)),
+                Vector3.Y
+        );
 
         return builder.end();
     }
