@@ -67,7 +67,7 @@ public class View {
         debugRenderer =  new ShapeRenderer();
         batch = new SpriteBatch();
         shadow = new Texture("shadow4.png");
-        shadowHand = new Texture("shadowhand.png");
+        shadowHand = new Texture("shadowhand2.png");
         chest = new Texture("chest-2.png");
         badLogic64 = new Texture("badlogic64.jpg");
 
@@ -311,15 +311,15 @@ public class View {
                 )));
         final Vector3 off = dir.cpy().scl(sizeOfBlock / 2 * 0.2f);
         final Vector3 visend = end.cpy().add(
-                dir.cpy().scl(sizeOfBlock / 2 * 1)
+                dir.cpy().scl(sizeOfBlock / 2 * 1.2f)
         );
         final Vector3 prevOff = dir.cpy().scl(-sizeOfBlock / 2 * 0.4f);
 
         bodyBuilder.rect(
-                prev.cpy().add(prevOff).add(perp.cpy().scl(0.8f)),
-                prev.cpy().add(prevOff).sub(perp.cpy().scl(0.8f)),
-                visend.cpy().add(off).sub(perp.cpy().scl(0.9f)),
-                visend.cpy().add(off).add(perp.cpy().scl(0.9f)),
+                prev.cpy().add(prevOff).add(perp.cpy().scl(0.9f)),
+                prev.cpy().add(prevOff).sub(perp.cpy().scl(0.9f)),
+                visend.cpy().add(off).sub(perp.cpy().scl(1.2f)),
+                visend.cpy().add(off).add(perp.cpy().scl(1.2f)),
                 Vector3.Y
         );
 
