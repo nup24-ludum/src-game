@@ -73,6 +73,7 @@ project(":core") {
 
     test {
         useJUnitPlatform()
+        workingDir = new File(projectDir.toPath().resolveSibling("assets").toString())
         maxHeapSize = '1G'
         testLogging {
             events "passed"
