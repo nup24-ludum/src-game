@@ -119,13 +119,13 @@ public class MyGame extends ApplicationAdapter {
             }
         }
 
-        System.out.println("Field dump:");
-        for (int y = 0; y < fieldHeight; y++) {
-            for (int x = 0; x < fieldWidth; x++) {
-                System.out.print(field[y][x].toShortString());
-            }
-            System.out.print("\n");
-        }
+//        System.out.println("Field dump:");
+//        for (int y = 0; y < fieldHeight; y++) {
+//            for (int x = 0; x < fieldWidth; x++) {
+//                System.out.print(field[y][x].toShortString());
+//            }
+//            System.out.print("\n");
+//        }
         System.out.println("New game field os size (" + fieldWidth + ", " + fieldHeight + ")");
         System.out.println("Player is at " + playerPos);
 
