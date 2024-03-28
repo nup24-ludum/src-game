@@ -1,4 +1,6 @@
 import com.badlogic.gdx.backends.headless.HeadlessApplication;
+import com.badlogic.gdx.maps.tiled.TiledMap;
+import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.mygdx.game.Logic;
 import com.mygdx.game.MyGame;
 import org.junit.Test;
@@ -10,9 +12,9 @@ import org.junit.runner.RunWith;
 public class LoadLevelTests {
     @Test
     public void testIsCellType() {
-        final MyGame game = new MyGame();
-
-        game.loadField("map1.tmx");
-
+//        final MyGame game = new MyGame();
+//
+//        game.loadField("map1.tmx");
+        final TiledMap map = new TmxMapLoader().load("map1.tmx");
     }
 }
