@@ -103,7 +103,7 @@ public class MyGame extends ApplicationAdapter {
                     field[i][j] = Logic.CellType.ENTRANCE;
                     continue;
                 }
-                if (i == 7 && j == 6) {
+                if (i == 5 && j == 6) {
                     field[i][j] = Logic.CellType.TREASURE;
                     continue;
                 }
@@ -128,7 +128,7 @@ public class MyGame extends ApplicationAdapter {
 //            for (int x = 0; x < fieldWidth; x++) {
 //                System.out.print(field[y][x].toShortString());
 //            }
-//            System.out.print("\n");
+//            System.out.prin   t("\n");
 //        }
 //        System.out.println("New game field os size (" + fieldWidth + ", " + fieldHeight + ")");
 //        System.out.println("Player is at " + playerPos);
