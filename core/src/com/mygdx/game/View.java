@@ -1,7 +1,6 @@
 package com.mygdx.game;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.Texture;
@@ -13,7 +12,6 @@ import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute;
-import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy;
 import com.badlogic.gdx.graphics.g3d.decals.Decal;
@@ -23,8 +21,8 @@ import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector3;
 
-import java.util.List;
-import java.util.Random;
+import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class View {
@@ -41,8 +39,7 @@ public class View {
 
     /* Resources for the don't starve look */
     private final ModelBatch modelBatch;
-    private final Model shadowModel;
-    private final ModelInstance shadowInstance;
+    private List<Model> shadowModels;
     private final PerspectiveCamera cam;
     private final DecalBatch decalBatch;
 
@@ -72,24 +69,7 @@ public class View {
         cam = new PerspectiveCamera(30, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
         decalBatch = new DecalBatch(10, new CameraGroupStrategy(cam));
-
-        shadowModel = buildShadow(List.of(
-                new Logic.Pos(0, 1),
-                new Logic.Pos(0, 2),
-                new Logic.Pos(0, 3),
-                new Logic.Pos(1, 3),
-                new Logic.Pos(2, 3),
-                new Logic.Pos(2, 2),
-                new Logic.Pos(2, 1),
-                new Logic.Pos(3, 1),
-                new Logic.Pos(4, 1),
-                new Logic.Pos(5, 1),
-                new Logic.Pos(5, 2),
-                new Logic.Pos(5, 3),
-                new Logic.Pos(6, 3),
-                new Logic.Pos(6, 4)
-        ), shadow, shadowHand);
-        shadowInstance = new ModelInstance(shadowModel);
+        shadowModels = Collections.emptyList();
     }
 
     public void view(final Logic model) {
@@ -107,7 +87,21 @@ public class View {
         decalBatch.flush();
 
         modelBatch.begin(cam);
-        modelBatch.render(shadowInstance);
+        // FIXME this is some lame shit right here
+        if (shadowModels.isEmpty() && model.getIsTreasureStolen()) {
+            shadowModels = buildShadowSegments(model)
+                    .stream()
+                    .map(x -> buildShadow(x, shadow, shadowHand))
+                    .collect(Collectors.toList());
+        }
+        if (!shadowModels.isEmpty() && model.getIsTreasureStolen()) {
+            shadowModels.stream()
+                    .map(ModelInstance::new)
+                    .forEach(modelBatch::render);
+        } else if (!shadowModels.isEmpty()) {
+            shadowModels.forEach(Model::dispose);
+            shadowModels.clear();
+        }
         modelBatch.end();
         
 	model.allThings().forEach(entry -> {
@@ -152,6 +146,49 @@ public class View {
         );
     }
 
+    final Logic.Pos shadowStart(final Logic logic) {
+        final Logic.Pair pair = logic.getHistory().get(0);
+        final Logic.Pos t = pair.pos.applyDir(pair.dir);
+
+        return new Logic.Pos(
+                pair.pos.x - (t.x - pair.pos.x),
+                pair.pos.y - (t.y - pair.pos.y)
+        );
+    }
+
+    private boolean isDir(final Logic.Pos l, final Logic.Pos r) {
+        return  l.equals(r.applyDir(Logic.MoveDirection.LEFT)) ||
+                l.equals(r.applyDir(Logic.MoveDirection.RIGHT)) ||
+                l.equals(r.applyDir(Logic.MoveDirection.DOWN)) ||
+                l.equals(r.applyDir(Logic.MoveDirection.UP));
+    }
+
+    private List<List<Logic.Pos>> buildShadowSegments(final Logic logic) {
+        final List<List<Logic.Pos>> res = new ArrayList<>();
+
+        Logic.Pos prev = shadowStart(logic);
+        res.add(new ArrayList<>(Collections.singleton(prev)));
+        for (final Logic.Pair pair : logic.getHistory()) {
+            final Logic.Pos end = pair.pos;
+            if (!logic.getCell(end.x, end.y).hasShadow) {
+                continue;
+            }
+
+            if (!isDir(prev, end) && !res.get(res.size() - 1).isEmpty()) {
+                prev = end;
+
+                res.add(new ArrayList<>());
+                res.get(res.size() - 1).add(prev);
+                continue;
+            }
+
+            prev = end;
+            res.get(res.size() - 1).add(end);
+        }
+
+        return res;
+    }
+
     private static Model buildShadow(
             final List<Logic.Pos> points,
             final Texture shadow,
@@ -159,8 +196,50 @@ public class View {
         final ModelBuilder builder = new ModelBuilder();
         builder.begin();
         final Random rand = new Random();
-        Vector3 prev = logicToDisplay(new Logic.Pos(0, 0))
+        Vector3 prev = logicToDisplay(points.get(0))
                 .add(sizeOfBlock / 2, -0.99f, sizeOfBlock / 2);
+
+        // FIXME we probably might need a unique visual for 1-cell shadow
+        if (points.size() == 1) {
+            final MeshPartBuilder handBuilder = builder.part(
+                    "hand",
+                    GL20.GL_TRIANGLES,
+                    Usage.Position | Usage.TextureCoordinates,
+                    new Material(
+                            new BlendingAttribute(true, 1),
+                            TextureAttribute.createDiffuse(new TextureRegion(shadowHand))
+                    )
+            );
+
+            prev.add(-sizeOfBlock / 2, 0, 0);
+            final Logic.Pos pos = points.get(points.size() - 1);
+            final Vector3 end = logicToDisplay(pos)
+                    .add(sizeOfBlock / 2, -0.99f, sizeOfBlock / 2);
+            final Vector3 dir = end.cpy().sub(prev).nor();
+            final Vector3 perpNo = new Vector3(dir.z, 0, -dir.x);
+            final Vector3 perp = new Vector3(dir.z, 0, -dir.x)
+                    .scl(sizeOfBlock / 2);
+            final Vector3 ranoff = dir.cpy().scl(0.3f * sizeOfBlock / 2 * rand.nextFloat(0.2f, 1))
+                    .add(perpNo.scl( sizeOfBlock / 2 * (
+                            (0.3f * rand.nextFloat(0, 1) + 0.2f) *
+                                    (rand.nextBoolean() ? -1 : 1)
+                    )));
+            final Vector3 off = dir.cpy().scl(sizeOfBlock / 2 * 0.2f);
+            final Vector3 visend = end.cpy().add(
+                    dir.cpy().scl(sizeOfBlock / 2 * 1.2f)
+            );
+            final Vector3 prevOff = dir.cpy().scl(-sizeOfBlock / 2 * 0.4f);
+
+            handBuilder.rect(
+                    prev.cpy().add(prevOff).add(perp.cpy().scl(0.9f)),
+                    prev.cpy().add(prevOff).sub(perp.cpy().scl(0.9f)),
+                    visend.cpy().add(off).sub(perp.cpy().scl(1.2f)),
+                    visend.cpy().add(off).add(perp.cpy().scl(1.2f)),
+                    Vector3.Y
+            );
+
+            return builder.end();
+        }
 
         final MeshPartBuilder bodyBuilder = builder.part(
                 "arm",
@@ -173,7 +252,7 @@ public class View {
                 )
         );
 
-        for (int i = 0; i < points.size(); i++) {
+        for (int i = 1; i < points.size(); i++) {
             final Logic.Pos pos = points.get(i);
             final Vector3 end = logicToDisplay(pos)
                     .add(sizeOfBlock / 2, -0.99f, sizeOfBlock / 2);
@@ -241,7 +320,7 @@ public class View {
         );
         final Vector3 prevOff = dir.cpy().scl(-sizeOfBlock / 2 * 0.4f);
 
-        bodyBuilder.rect(
+        handBuilder.rect(
                 prev.cpy().add(prevOff).add(perp.cpy().scl(0.9f)),
                 prev.cpy().add(prevOff).sub(perp.cpy().scl(0.9f)),
                 visend.cpy().add(off).sub(perp.cpy().scl(1.2f)),
@@ -423,6 +502,6 @@ public class View {
         batch.dispose();
 
         modelBatch.dispose();
-        shadowModel.dispose();
+        shadowModels.forEach(Model::dispose);
     }
 }
