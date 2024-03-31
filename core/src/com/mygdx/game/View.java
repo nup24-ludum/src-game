@@ -55,7 +55,6 @@ public class View {
             final Texture img = switch (ty) {
               case PLAYER -> playerImg;
               case BOX -> boxImg;
-              default -> null;
             };
             final Sprite sprite = new Sprite(img, 64, 64);
                 sprite.setSize(64, 64);
@@ -91,30 +90,12 @@ public class View {
     }
 
     private void drawTexture(CellType type, Vector2 pos) {
-        Texture toDraw;
-        switch (type) {
-            case FLOOR: {
-                toDraw = grass;
-                break;
-            }
-            case WALL: {
-                toDraw = wall;
-                break;
-            }
-            case ENTRANCE: {
-                toDraw = grass;
-                break;
-            }
-            case TREASURE: {
-                toDraw = chest;
-                break;
-            }
-            default: {
-                toDraw = badLogic64;
-                break;
-            }
-
-        }
+        final Texture toDraw = switch (type) {
+            case FLOOR ->  grass;
+            case WALL -> wall;
+            case TREASURE -> chest;
+            case ENTRANCE -> badLogic64;
+        };
         batch.begin();
         batch.draw(toDraw, pos.x, pos.y);
         batch.end();
