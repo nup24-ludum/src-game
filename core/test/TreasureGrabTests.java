@@ -83,10 +83,10 @@ public class TreasureGrabTests {
 
     private boolean[][] shadowCoverage(final Logic logic, final int width, final int height) {
         boolean[][] shadowField = new boolean[height][width];
-        Logic.Cell[][] field = new Logic.Cell[height][width];
+
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                shadowField[y][x] = field[y][x].hasShadow;
+                shadowField[y][x] = logic.getCell(x, y).hasShadow;
             }
         }
         return shadowField;
@@ -99,7 +99,7 @@ public class TreasureGrabTests {
     ) {
 
         Arrays.stream(moves).forEach(logic::movePlayer);
-        logic.applyShadowToField();
+//        logic.applyShadowToField();
 
         Assertions.assertEquals(
                 "\n" + shadowExpectation.trim(),
@@ -186,7 +186,7 @@ public class TreasureGrabTests {
         );
         boolean[][] newShadow = shadowCoverage(logic, 8, 8);
 
-        Assertions.assertEquals(shadow, newShadow);
+        Assertions.assertTrue(Arrays.deepEquals(shadow, newShadow));
     }
 
 }
