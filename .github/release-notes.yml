@@ -1,0 +1,6 @@
+changelog:
+  sections:
+  - title: ":hammer: Features"
+    labels: ["feature"]
+  - title: ":bug: Bugs"
+    labels: ["bug"]
