@@ -59,6 +59,8 @@ public class TreasureGrabTests {
             for (int x = 0; x < logic.getFieldWidth(); x++) {
                 if (logic.getCell(x, y).hasShadow) {
                     acc.append("x");
+                } else if (logic.getCell(x, y).type == Logic.CellType.TREASURE) {
+                    acc.append("$");
                 } else {
                     acc.append("o");
                 }
@@ -79,7 +81,16 @@ public class TreasureGrabTests {
         return field;
     }
 
-
+    private boolean[][] shadowCoverage(final Logic logic, final int width, final int height) {
+        boolean[][] shadowField = new boolean[height][width];
+        Logic.Cell[][] field = new Logic.Cell[height][width];
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                shadowField[y][x] = field[y][x].hasShadow;
+            }
+        }
+        return shadowField;
+    }
 
     private void tryMoves(
             final Logic logic,
@@ -106,27 +117,76 @@ public class TreasureGrabTests {
         tryMoves(logic, moves, shadowExpectation);
     }
 
-    private void tryMoves(
+    private Logic tryMoves(
             final int fieldWidth,
             final int fieldHeight,
             final Logic.Pos playerPos,
+            final Logic.Pos treasurePos,
             final String movesCode,
             final String shadowExpectation
+    ) {
+        final Logic.CellType[][] field = genEmptyField(fieldWidth, fieldHeight);
+        field[playerPos.y][playerPos.x] = Logic.CellType.ENTRANCE;
+        field[treasurePos.y][treasurePos.x] = Logic.CellType.TREASURE;
+        final Logic logic = new Logic(field, Map.of());
+
+        makeAssertion(logic, fieldWidth, fieldHeight);
+
+        tryMoves(logic, movesCode, shadowExpectation);
+        return logic;
+    }
+
+    private void makeAssertion(
+            Logic logic,
+            final int fieldWidth,
+            final int fieldHeight
     ) {
         Assertions.assertNotEquals(fieldHeight, 0);
         Assertions.assertNotEquals(fieldWidth, 0);
 
-        final Logic.CellType[][] field = genEmptyField(fieldWidth, fieldHeight);
-        field[playerPos.y][playerPos.x] = Logic.CellType.ENTRANCE;
-
-        final Logic logic = new Logic(field, Map.of());
-
+        Assertions.assertEquals(1, logic.allThings().filter(x -> x.getValue() == Logic.ThingType.PLAYER).count());
+        Logic.Pos act = logic.allThings().filter(x -> x.getValue() == Logic.ThingType.PLAYER).findFirst().get().getKey();
         Logic.Pos exp = searchPos(logic, Logic.CellType.ENTRANCE);
-        Assertions.assertEquals(playerPos, exp);
-
-
-        tryMoves(logic, movesCode, shadowExpectation);
+        Assertions.assertEquals(exp, act);
     }
 
+    @Test
+    public void testCoverSimple() {
+        Logic logic = tryMoves(
+                8, 8,
+                new Logic.Pos(1, 1),
+                new Logic.Pos(3, 3),
+                "RRDD",
+                """
+                        oooooooo
+                        ooxxoooo
+                        oooxoooo
+                        ooo$oooo
+                        oooooooo
+                        oooooooo
+                        oooooooo
+                        oooooooo
+                        """
+        );
+        boolean[][] shadow = shadowCoverage(logic, 8, 8);
+
+        tryMoves(
+                logic,
+                "DDUU",
+                """
+                        oooooooo
+                        ooxxoooo
+                        oooxoooo
+                        ooo$oooo
+                        oooooooo
+                        oooooooo
+                        oooooooo
+                        oooooooo
+                        """
+        );
+        boolean[][] newShadow = shadowCoverage(logic, 8, 8);
+
+        Assertions.assertEquals(shadow, newShadow);
+    }
 
 }
