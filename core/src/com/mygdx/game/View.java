@@ -21,6 +21,7 @@ import com.badlogic.gdx.graphics.g3d.decals.DecalBatch;
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 
 import java.util.Collection;
@@ -160,12 +161,7 @@ public class View {
                     pair.pos.y - (t.y - pair.pos.y)
             );
 
-            final Vector2 beg = logicToScreen(oldPos, fieldHeight, start)
-                    .add(sizeOfBlock / 2, -sizeOfBlock / 2);
-            final Vector2 end = logicToScreen(pair.pos, fieldHeight, start)
-                    .add(sizeOfBlock / 2, -sizeOfBlock / 2);
-
-            DrawDebugLine(beg, end);
+            //DrawDebugLine(beg, end);
         }
 
         modelBatch.begin(cam);
@@ -207,15 +203,6 @@ public class View {
             decalBatch.add(dec);
         });
         decalBatch.flush();
-    }
-
-    private void DrawDebugLine(Vector2 start, Vector2 end) {
-        Gdx.gl.glLineWidth(2);
-        debugRenderer.begin(ShapeRenderer.ShapeType.Line);
-        debugRenderer.setColor(Color.RED);
-        debugRenderer.line(start, end);
-        debugRenderer.end();
-        Gdx.gl.glLineWidth(1);
     }
     
     private static Vector3 shadowWiggle(final Random rand) {
