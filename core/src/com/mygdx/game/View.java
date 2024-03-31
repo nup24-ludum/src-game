@@ -41,18 +41,12 @@ public class View {
 
     /* Resources for the don't starve look */
     private final ModelBatch modelBatch;
-    private final Model leftWall;
-    private final Model rightWall;
-    private final Model backWall;
     private final Model shadowModel;
     private final ModelInstance shadowInstance;
-    private final ModelInstance leftWallInstance;
-    private final ModelInstance rightWallInstance;
-    private final ModelInstance backWallInstance;
     private final PerspectiveCamera cam;
     private final DecalBatch decalBatch;
 
-    private static float sizeOfBlock = 1 / 10f * 2;
+    private static final float sizeOfBlock = 1 / 10f * 2;
     private static final float wallHeight = 0.8f;
 
     View() {
@@ -72,55 +66,6 @@ public class View {
 
         modelBatch = new ModelBatch();
         cam = new PerspectiveCamera(30, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        cam.position.set(0f, 1.5f, 3.0f);
-        cam.lookAt(0, -0.8f, 0);
-        cam.far = 300f;
-        cam.update();
-        final ModelBuilder modelBuilder = new ModelBuilder();
-
-        // LB, RB, RT, LT
-        leftWall = modelBuilder.createRect(
-                -1, -1, 1,
-                -1, -1, -1,
-                -1, -1 + wallHeight, -1,
-                -1, -1 + wallHeight, 1,
-                0, 0, -1,
-                new Material(
-                        TextureAttribute.createDiffuse(wall),
-                        ColorAttribute.createDiffuse(new Color(1, 1, 1, 1))
-                ),
-                Usage.Position | Usage.Normal | Usage.TextureCoordinates
-        );
-        rightWall = modelBuilder.createRect(
-                1, -1, -1,
-                1, -1, 1,
-                1, -1 + wallHeight, 1,
-                1, -1 + wallHeight, -1,
-                0, 0, -1,
-                new Material(
-                        TextureAttribute.createDiffuse(wall),
-                        ColorAttribute.createDiffuse(new Color(1, 1, 1, 1))
-                ),
-                Usage.Position | Usage.Normal | Usage.TextureCoordinates
-        );
-        backWall = modelBuilder.createRect(
-                -1, -1, -1,
-                1, -1, -1,
-                1, -1 + wallHeight, -1,
-                -1, -1 + wallHeight, -1,
-                0, 0, -1,
-                new Material(
-                        TextureAttribute.createDiffuse(wall),
-//                        ColorAttribute.createDiffuse(new Color(0.6f, 0.6f, 0.6f, 1))
-                        ColorAttribute.createDiffuse(new Color(1f, 1f, 1f, 1))
-
-                ),
-                Usage.Position | Usage.Normal | Usage.TextureCoordinates
-        );
-
-        leftWallInstance = new ModelInstance(leftWall);
-        rightWallInstance = new ModelInstance(rightWall);
-        backWallInstance = new ModelInstance(backWall);
 
         decalBatch = new DecalBatch(10, new CameraGroupStrategy(cam));
 
@@ -153,6 +98,8 @@ public class View {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
         drawField(model);
+        drawWalls(model);
+        decalBatch.flush();
 	
 	for (final Logic.Pair pair : model.getHistory()) {
             // pair contains an old pos.
@@ -166,9 +113,6 @@ public class View {
         }
 
         modelBatch.begin(cam);
-        modelBatch.render(leftWallInstance);
-        modelBatch.render(rightWallInstance);
-        modelBatch.render(backWallInstance);
         modelBatch.render(shadowInstance);
         modelBatch.end();
         
@@ -314,6 +258,51 @@ public class View {
         return builder.end();
     }
 
+    private void drawWalls(final Logic logic) {
+        final int width = logic.getFieldWidth();
+        final int height = logic.getFieldHeight();
+        final Vector3 center = fieldCenter(logic);
+
+        final Decal leftWall = Decal.newDecal(
+                (float)height * sizeOfBlock,
+                wallHeight,
+                new TextureRegion(wall) // TODO improve
+        );
+        leftWall.rotateY(90);
+        leftWall.setPosition(
+                logicToDisplay(new Logic.Pos(0, 0)).x,
+                wallHeight/2f - 1f,
+                center.z
+        );
+
+        final Decal rightWall = Decal.newDecal(
+                (float)height * sizeOfBlock,
+                wallHeight,
+                new TextureRegion(wall) // TODO improve
+        );
+        rightWall.rotateY(-90);
+        rightWall.setPosition(
+                logicToDisplay(new Logic.Pos(width, 0)).x,
+                wallHeight/2f - 1f,
+                center.z
+        );
+
+        final Decal backWall = Decal.newDecal(
+                (float)width * sizeOfBlock,
+                wallHeight,
+                new TextureRegion(wall) // TODO improve
+        );
+        backWall.setPosition(
+                center.x,
+                wallHeight/2f - 1f,
+                logicToDisplay(new Logic.Pos(0, 0)).z
+        );
+
+        decalBatch.add(leftWall);
+        decalBatch.add(rightWall);
+        decalBatch.add(backWall);
+    }
+
     private void drawField(final Logic logic) {
         for (int y = 0; y < logic.getFieldHeight(); y++) {
             for (int x = 0; x < logic.getFieldWidth(); x++) {
@@ -328,31 +317,42 @@ public class View {
                 decalBatch.add(dec);
             }
         }
-        decalBatch.flush();
     }
 
     private Vector3 cameraPos(final Logic logic) {
         final Vector3 camPos = fieldLookAtPoint(logic);
 
-        camPos.y = 1.5f;
-        camPos.z = 3.0f;
+        camPos.y = 1.5f + (1 - (float)logic.getFieldHeight()/10f) * 1.2f;
+        camPos.z = 3.0f - (1 - (float)logic.getFieldHeight()/10f) * 3.0f;
 
         return camPos;
     }
 
     private Vector3 fieldLookAtPoint(final Logic logic) {
-        final int width = logic.getFieldWidth();
-        final int height = logic.getFieldHeight();
-        final Logic.Pos centerTile = new Logic.Pos(width / 2, height / 2);
-        final Vector3 center = logicToDisplay(centerTile);
-
-        /* For evenly sized maps it's prettier to look at the edge */
-        if (centerTile.x % 2 == 0) {
-            center.x += sizeOfBlock / 2f;
-        }
+        final Vector3 center = fieldCenter(logic);
 
         /* Looking at a point slightly above -1f improves the overall feel */
         center.y = -0.8f;
+
+        return center;
+    }
+
+    private Vector3 fieldCenter(final Logic logic) {
+        final int width = logic.getFieldWidth();
+        final int height = logic.getFieldHeight();
+        final Vector3 center = logicToDisplay(new Logic.Pos(width / 2, height / 2));
+
+        /* For evenly sized maps it's not the center of any tile */
+        if (width % 2 == 1) {
+            center.x += sizeOfBlock / 2f;
+        }
+
+        if (height % 2 == 1) {
+            center.z += sizeOfBlock / 2f;
+        }
+
+        /* The actual y of tiles */
+        center.y = -1f;
 
         return center;
     }
@@ -372,9 +372,6 @@ public class View {
         batch.dispose();
 
         modelBatch.dispose();
-        leftWall.dispose();
-        rightWall.dispose();
-        backWall.dispose();
         shadowModel.dispose();
     }
 }
