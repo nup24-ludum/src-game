@@ -19,6 +19,7 @@ public class View {
     private final Texture grass;
     private final Texture wall;
     private final Texture shadow;
+    private final Texture chest;
     private static final float sizeOfBlock = 64;
 
     View() {
@@ -29,6 +30,7 @@ public class View {
         debugRenderer =  new ShapeRenderer();
         batch = new SpriteBatch();
         shadow = new Texture("shadow-2.png");
+        chest = new Texture("chest-2.png");
     }
 
     public void view(final Logic model) {
@@ -51,12 +53,14 @@ public class View {
             final Logic.ThingType ty = entry.getValue();
             final Texture img;
             switch (ty) {
-                case PLAYER:
+                case PLAYER: {
                     img = playerImg;
                     break;
-                case BOX:
+                }
+                case BOX: {
                     img = boxImg;
                     break;
+                }
                 default:
                     img = null;
             }
@@ -103,6 +107,14 @@ public class View {
             }
             case WALL: {
                 toDraw = wall;
+                break;
+            }
+            case ENTRANCE: {
+                toDraw = grass;
+                break;
+            }
+            case TREASURE: {
+                toDraw = chest;
                 break;
             }
             default: {

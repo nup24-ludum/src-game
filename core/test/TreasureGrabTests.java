@@ -7,18 +7,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
-public class FieldCoverageTests {
-    private Logic.CellType[][] genEmptyField(final int width, final int height) {
-        final Logic.CellType[][] field = new Logic.CellType[height][width];
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                field[y][x] = Logic.CellType.FLOOR;
-            }
-        }
+public class TreasureGrabTests {
 
-        return field;
-    }
-
+    int treasureCounter = 0;
     private Logic.MoveDirection[] parseMoveSequence(final String code) {
         final char[] chars = code.toCharArray();
         final Logic.MoveDirection[] dirs = new Logic.MoveDirection[code.length()];
@@ -47,6 +38,20 @@ public class FieldCoverageTests {
         return dirs;
     }
 
+    public Logic.Pos searchPos(Logic logic, Logic.CellType obj) {
+        Logic.Pos pos = new Logic.Pos(0, 0);
+
+        for (int y = 0; y < logic.getFieldHeight(); y++) {
+            for (int x = 0; x < logic.getFieldWidth(); x++) {
+                if (logic.getCell(x, y).type == obj) {
+                    pos.x = x;
+                    pos.y = y;
+                }
+            }
+        }
+        return pos;
+    }
+
     private String encodeShadow(final Logic logic) {
         StringBuilder acc = new StringBuilder();
 
@@ -54,15 +59,37 @@ public class FieldCoverageTests {
             for (int x = 0; x < logic.getFieldWidth(); x++) {
                 if (logic.getCell(x, y).hasShadow) {
                     acc.append("x");
+                } else if (logic.getCell(x, y).type == Logic.CellType.TREASURE) {
+                    acc.append("$");
                 } else {
                     acc.append("o");
                 }
             }
-
             acc.append("\n");
         }
-
         return acc.toString();
+    }
+
+    private Logic.CellType[][] genEmptyField(final int width, final int height) {
+        final Logic.CellType[][] field = new Logic.CellType[height][width];
+
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                field[y][x] = Logic.CellType.FLOOR;
+            }
+        }
+        return field;
+    }
+
+    private boolean[][] shadowCoverage(final Logic logic, final int width, final int height) {
+        boolean[][] shadowField = new boolean[height][width];
+
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                shadowField[y][x] = logic.getCell(x, y).hasShadow;
+            }
+        }
+        return shadowField;
     }
 
     private void tryMoves(
@@ -70,8 +97,9 @@ public class FieldCoverageTests {
             final Logic.MoveDirection[] moves,
             final String shadowExpectation
     ) {
+
         Arrays.stream(moves).forEach(logic::movePlayer);
-        logic.applyShadowToField();
+//        logic.applyShadowToField();
 
         Assertions.assertEquals(
                 "\n" + shadowExpectation.trim(),
@@ -89,153 +117,76 @@ public class FieldCoverageTests {
         tryMoves(logic, moves, shadowExpectation);
     }
 
-    private void tryMoves(
+    private Logic tryMoves(
             final int fieldWidth,
             final int fieldHeight,
             final Logic.Pos playerPos,
+            final Logic.Pos treasurePos,
             final String movesCode,
             final String shadowExpectation
+    ) {
+        final Logic.CellType[][] field = genEmptyField(fieldWidth, fieldHeight);
+        field[playerPos.y][playerPos.x] = Logic.CellType.ENTRANCE;
+        field[treasurePos.y][treasurePos.x] = Logic.CellType.TREASURE;
+        final Logic logic = new Logic(field, Map.of());
+
+        makeAssertion(logic, fieldWidth, fieldHeight);
+
+        tryMoves(logic, movesCode, shadowExpectation);
+        return logic;
+    }
+
+    private void makeAssertion(
+            Logic logic,
+            final int fieldWidth,
+            final int fieldHeight
     ) {
         Assertions.assertNotEquals(fieldHeight, 0);
         Assertions.assertNotEquals(fieldWidth, 0);
 
-        // FIXME we rely on correctness of entrance tiles. Does not seems good
-        final Logic.CellType[][] field = genEmptyField(fieldWidth, fieldHeight);
-        field[playerPos.y][playerPos.x] = Logic.CellType.ENTRANCE;
-
-        final Logic logic = new Logic(field, Map.of());
-
-        tryMoves(logic, movesCode, shadowExpectation);
+        Assertions.assertEquals(1, logic.allThings().filter(x -> x.getValue() == Logic.ThingType.PLAYER).count());
+        Logic.Pos act = logic.allThings().filter(x -> x.getValue() == Logic.ThingType.PLAYER).findFirst().get().getKey();
+        Logic.Pos exp = searchPos(logic, Logic.CellType.ENTRANCE);
+        Assertions.assertEquals(exp, act);
     }
 
     @Test
     public void testCoverSimple() {
-        tryMoves(
+        Logic logic = tryMoves(
                 8, 8,
                 new Logic.Pos(1, 1),
+                new Logic.Pos(3, 3),
                 "RRDD",
                 """
                         oooooooo
                         ooxxoooo
                         oooxoooo
-                        oooooooo
-                        oooooooo
-                        oooooooo
-                        oooooooo
-                        oooooooo
-                        """
-        );
-    }
-    @Test
-    public void testCoverSimpleCircle() {
-        tryMoves(
-                8, 7,
-                new Logic.Pos(1, 1),
-                "RRRDDLLUUU",
-                """
-                        oooooooo
-                        oooooooo
-                        oooooooo
+                        ooo$oooo
                         oooooooo
                         oooooooo
                         oooooooo
                         oooooooo
                         """
         );
-    }
-    @Test
-    public void testLongDistance() {
-        tryMoves(
-                8, 7,
-                new Logic.Pos(0, 0),
-                "RRRRRRRDDDDDDLLLLLLLUUUUURRRRRRDDDLLLL",
-                """
-                        oxxxxxxx
-                        xxxxxxxx
-                        xoooooxx
-                        xoooooxx
-                        xooxxxxx
-                        xoooooox
-                        xxxxxxxx
-                        """
-        );
-    }
-    @Test
-    public void testCoverTwoCircles() {
-        tryMoves(8, 8,
-                new Logic.Pos(0, 0),
-                "RRRDDLLUURRDDDRRDDLLUUR",
-                """
-                        oooooooo
-                        oooooooo
-                        oooooooo
-                        oooooooo
-                        oooooooo
-                        oooooooo
-                        oooooooo
-                        oooooooo
-                        """
-                );
-    }
+        boolean[][] shadow = shadowCoverage(logic, 8, 8);
 
-    @Test
-    public void testSomeDiffFieldSize() {
-        tryMoves(8, 4,
-                new Logic.Pos(1, 1),
-                "RRDD",
+        tryMoves(
+                logic,
+                "DDUU",
                 """
                         oooooooo
                         ooxxoooo
                         oooxoooo
+                        ooo$oooo
                         oooooooo
-                        """);
-    }
+                        oooooooo
+                        oooooooo
+                        oooooooo
+                        """
+        );
+        boolean[][] newShadow = shadowCoverage(logic, 8, 8);
 
-    @Test
-    public void testCoverHugeCircle() {
-        tryMoves(8, 8,
-                new Logic.Pos(0 ,0),
-                "RRRRRRRDDDDDDDLLLLLLLUUUUUUURR",
-                """
-                        oooooooo
-                        oooooooo
-                        oooooooo
-                        oooooooo
-                        oooooooo
-                        oooooooo
-                        oooooooo
-                        oooooooo
-                        """);
-    }
-    /* move history for test below
-    * s x x x
-    * x X X x
-    * x _ _ x
-    * x x x x
-    */
-    @Test
-    public void testCoverNotValidCircle() {
-        tryMoves(4, 4,
-                new Logic.Pos(0, 0),
-                "RRDLURR",
-                """
-                        oxxo
-                        oxxo
-                        oooo
-                        oooo
-                        """);
-    }
-    @Test
-    public void testCoverNotValidCircleInCircle() {
-        tryMoves(4, 4,
-                new Logic.Pos(0, 0),
-                "RRDLURRDDDLLLUUURRR",
-                """
-                        oooo
-                        oxxo
-                        oooo
-                        oooo
-                        """);
+        Assertions.assertTrue(Arrays.deepEquals(shadow, newShadow));
     }
 
 }

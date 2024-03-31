@@ -99,6 +99,15 @@ public class MyGame extends ApplicationAdapter {
         Logic.CellType[][] field = new Logic.CellType[fieldHeight][fieldWidth];
         for (int i = 0; i < field.length; i++) {
             for (int j = 0; j < field[i].length; j++) {
+                if (i == 2 && j == 4) {
+                    field[i][j] = Logic.CellType.ENTRANCE;
+                    continue;
+                }
+                if (i == 5 && j == 6) {
+                    field[i][j] = Logic.CellType.TREASURE;
+                    continue;
+                }
+
                 if (i == 0 && j == 0) {
                     field[i][j] = Logic.CellType.FLOOR;
                     continue;
@@ -119,10 +128,18 @@ public class MyGame extends ApplicationAdapter {
 //            for (int x = 0; x < fieldWidth; x++) {
 //                System.out.print(field[y][x].toShortString());
 //            }
-//            System.out.print("\n");
+//            System.out.prin   t("\n");
 //        }
 //        System.out.println("New game field os size (" + fieldWidth + ", " + fieldHeight + ")");
 //        System.out.println("Player is at " + playerPos);
+        for (int i = 0; i < field.length; i++) {
+            for (int j = 0; j < field[i].length; j++) {
+                if (field[i][j] == Logic.CellType.ENTRANCE) {
+                    playerPos = new Logic.Pos(j, i);
+                }
+            }
+        }
+
         spawnThings(playerPos);
         return field;
     }
