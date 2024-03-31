@@ -21,10 +21,8 @@ import com.badlogic.gdx.graphics.g3d.decals.DecalBatch;
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.IntStream;
@@ -146,7 +144,10 @@ public class View {
     }
 
     public void view(final Logic model) {
-        // start - offset from (0, 0)
+        cam.position.set(cameraPos(model));
+        cam.lookAt(fieldLookAtPoint(model));
+        cam.far = 300f;
+        cam.update();
 
         Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
@@ -328,6 +329,32 @@ public class View {
             }
         }
         decalBatch.flush();
+    }
+
+    private Vector3 cameraPos(final Logic logic) {
+        final Vector3 camPos = fieldLookAtPoint(logic);
+
+        camPos.y = 1.5f;
+        camPos.z = 3.0f;
+
+        return camPos;
+    }
+
+    private Vector3 fieldLookAtPoint(final Logic logic) {
+        final int width = logic.getFieldWidth();
+        final int height = logic.getFieldHeight();
+        final Logic.Pos centerTile = new Logic.Pos(width / 2, height / 2);
+        final Vector3 center = logicToDisplay(centerTile);
+
+        /* For evenly sized maps it's prettier to look at the edge */
+        if (centerTile.x % 2 == 0) {
+            center.x += sizeOfBlock / 2f;
+        }
+
+        /* Looking at a point slightly above -1f improves the overall feel */
+        center.y = -0.8f;
+
+        return center;
     }
 
     public static Vector3 logicToDisplay(
