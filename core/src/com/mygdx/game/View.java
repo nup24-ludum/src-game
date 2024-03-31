@@ -8,13 +8,13 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.utils.ScreenUtils;
 import com.mygdx.game.Logic.CellType;
 
 public class View {
     private final ShapeRenderer debugRenderer;
     private final SpriteBatch batch;
     private final Texture playerImg;
+    private final Texture badLogic64;
     private final Texture boxImg;
     private final Texture grass;
     private final Texture wall;
@@ -31,6 +31,7 @@ public class View {
         batch = new SpriteBatch();
         shadow = new Texture("shadow-2.png");
         chest = new Texture("chest-2.png");
+        badLogic64 = new Texture("badlogic64.jpg");
     }
 
     public void view(final Logic model) {
@@ -42,7 +43,7 @@ public class View {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
 //        ScreenUtils.clear(1, 1, 0, 1);
-        drawField(fieldWidth, fieldHeight, start, model, fieldHeight);
+        drawField( start, model, fieldHeight);
 //
         batch.begin();
         model.allThings().forEach(entry -> {
@@ -51,25 +52,15 @@ public class View {
                     new Vector2(0, sizeOfBlock)
             );
             final Logic.ThingType ty = entry.getValue();
-            final Texture img;
-            switch (ty) {
-                case PLAYER: {
-                    img = playerImg;
-                    break;
-                }
-                case BOX: {
-                    img = boxImg;
-                    break;
-                }
-                default:
-                    img = null;
-            }
+            final Texture img = switch (ty) {
+              case PLAYER -> playerImg;
+              case BOX -> boxImg;
+            };
             final Sprite sprite = new Sprite(img, 64, 64);
-            sprite.setSize(64, 64);
-            sprite.setPosition(pos.x, pos.y);
-
-            sprite.draw(batch);
-        });
+                sprite.setSize(64, 64);
+                sprite.setPosition(pos.x, pos.y);
+                sprite.draw(batch);
+            });
         batch.end();
 
         for (final Logic.Pair pair : model.getHistory()) {
@@ -99,36 +90,18 @@ public class View {
     }
 
     private void drawTexture(CellType type, Vector2 pos) {
-        Texture toDraw;
-        switch (type) {
-            case FLOOR: {
-                toDraw = grass;
-                break;
-            }
-            case WALL: {
-                toDraw = wall;
-                break;
-            }
-            case ENTRANCE: {
-                toDraw = grass;
-                break;
-            }
-            case TREASURE: {
-                toDraw = chest;
-                break;
-            }
-            default: {
-                toDraw = playerImg;
-                break;
-            }
-
-        }
+        final Texture toDraw = switch (type) {
+            case FLOOR ->  grass;
+            case WALL -> wall;
+            case TREASURE -> chest;
+            case ENTRANCE -> badLogic64;
+        };
         batch.begin();
         batch.draw(toDraw, pos.x, pos.y);
         batch.end();
     }
 
-    private void drawField(int width, int height, Vector2 start, final Logic logic, int fieldHeight) {
+    private void drawField( Vector2 start, final Logic logic, int fieldHeight) {
         for (int y = 0; y < logic.getFieldHeight(); y++) {
             for (int x = 0; x < logic.getFieldWidth(); x++) {
                 Vector2 currentCellPos = logicToScreen(
