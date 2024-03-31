@@ -167,6 +167,10 @@ public class Logic {
         return Collections.unmodifiableCollection(history);
     }
 
+    public boolean getIsTreasureStolen() {
+        return isTreasureStolen;
+    }
+
     public void movePlayer(final MoveDirection dir) {
         if (moveThing(playerPos, dir)) {
             playerPos = playerPos.applyDir(dir);

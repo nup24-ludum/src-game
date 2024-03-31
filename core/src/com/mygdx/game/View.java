@@ -48,6 +48,7 @@ public class View {
 
     private static final float sizeOfBlock = 1 / 10f * 2;
     private static final float wallHeight = 0.8f;
+    private final Texture[] traceTexture;
 
     View() {
         playerImg = new Texture("char.png");
@@ -63,6 +64,9 @@ public class View {
         shadowHand = new Texture("shadowhand2.png");
         chest = new Texture("chest-2.png");
         badLogic64 = new Texture("badlogic64.jpg");
+        traceTexture = IntStream.range(1, 4)
+                .mapToObj(x -> new Texture("trace" + x + ".png"))
+                .toArray(Texture[]::new);
 
         modelBatch = new ModelBatch();
         cam = new PerspectiveCamera(30, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -99,18 +103,8 @@ public class View {
 
         drawField(model);
         drawWalls(model);
+        drawPlayerTrace(model);
         decalBatch.flush();
-	
-	for (final Logic.Pair pair : model.getHistory()) {
-            // pair contains an old pos.
-            final Logic.Pos t = pair.pos.applyDir(pair.dir);
-            final Logic.Pos oldPos = new Logic.Pos(
-                    pair.pos.x - (t.x - pair.pos.x),
-                    pair.pos.y - (t.y - pair.pos.y)
-            );
-
-            //DrawDebugLine(beg, end);
-        }
 
         modelBatch.begin(cam);
         modelBatch.render(shadowInstance);
@@ -258,6 +252,49 @@ public class View {
         return builder.end();
     }
 
+    private void drawPlayerTrace(final Logic logic) {
+        if (logic.getIsTreasureStolen()) {
+            return;
+        }
+        
+        for (final Logic.Pair pair : logic.getHistory()) {
+            // pair contains an old pos.
+            final Logic.Pos t = pair.pos.applyDir(pair.dir);
+            final Logic.Pos oldPos = new Logic.Pos(
+                    pair.pos.x - (t.x - pair.pos.x),
+                    pair.pos.y - (t.y - pair.pos.y)
+            );
+
+            final Vector3 beg = logicToDisplay(oldPos)
+                    .add(sizeOfBlock / 2, 0, sizeOfBlock / 2);
+            final Vector3 end = logicToDisplay(pair.pos)
+                    .add(sizeOfBlock / 2, 0, sizeOfBlock / 2);
+            final Vector3 tracePos = beg.cpy().scl(0.5f)
+                    .add(end.cpy().scl(0.5f));
+            tracePos.y = -0.99f;
+
+            //DrawDebugLine(beg, end);
+            int x = pair.pos.x;
+            int y = pair.pos.y;
+            final Decal dec = Decal.newDecal(
+                    sizeOfBlock, sizeOfBlock * 0.45f,
+                    new TextureRegion(traceTexture[((x << 16) ^ y) % traceTexture.length])
+            );
+            dec.setColor(1, 1, 1, 0.6f);
+            dec.setBlending(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+            dec.rotateX(-90);
+            dec.setPosition(tracePos);
+
+            switch (pair.dir) {
+                case DOWN -> dec.rotateZ(-90);
+                case LEFT -> dec.rotateZ(180);
+                case UP -> dec.rotateZ(90);
+            }
+
+            decalBatch.add(dec);
+        }
+    }
+    
     private void drawWalls(final Logic logic) {
         final int width = logic.getFieldWidth();
         final int height = logic.getFieldHeight();
@@ -302,7 +339,7 @@ public class View {
         decalBatch.add(rightWall);
         decalBatch.add(backWall);
     }
-
+    
     private void drawField(final Logic logic) {
         for (int y = 0; y < logic.getFieldHeight(); y++) {
             for (int x = 0; x < logic.getFieldWidth(); x++) {
@@ -326,7 +363,7 @@ public class View {
                         sizeOfBlock, sizeOfBlock,
                         new TextureRegion(tileTexture)
                 );
-                dec.rotateX(90);
+                dec.rotateX(-90);
                 dec.setPosition(currentCellPos);
                 decalBatch.add(dec);
             }
