@@ -24,4 +24,4 @@ jobs:
       - name: Create PR to gold
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh pr create -B gold -H main --title 'New deploy' --body-file release.md
+        run: gh pr create -B gold -H main --title '${{ github.event.milestone.title }}' --body-file release.md
