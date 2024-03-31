@@ -309,9 +309,23 @@ public class View {
                 Vector3 currentCellPos = logicToDisplay(
                         new Logic.Pos(x, y)
                 ).add(sizeOfBlock / 2, -1, sizeOfBlock / 2);
+                final Logic.Cell cell = logic.getCell(x, y);
 
-                int idx = ((x << 16) ^ y) % grass.length;
-                final Decal dec = Decal.newDecal(sizeOfBlock, sizeOfBlock, new TextureRegion(grass[idx]));
+                final Texture tileTexture = switch (cell.type) {
+                    case FLOOR -> grass[((x << 16) ^ y) % grass.length];
+                    case WALL -> null;
+                    case ENTRANCE -> badLogic64;
+                    case TREASURE -> chest;
+                };
+
+                if (tileTexture == null) {
+                    continue;
+                }
+
+                final Decal dec = Decal.newDecal(
+                        sizeOfBlock, sizeOfBlock,
+                        new TextureRegion(tileTexture)
+                );
                 dec.rotateX(90);
                 dec.setPosition(currentCellPos);
                 decalBatch.add(dec);
