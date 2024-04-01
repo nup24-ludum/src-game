@@ -163,8 +163,12 @@ public class Logic {
         return player;
     }
 
-    public Collection<Pair> getHistory() {
-        return Collections.unmodifiableCollection(history);
+    public List<Pair> getHistory() {
+        return Collections.unmodifiableList(history);
+    }
+
+    public boolean getIsTreasureStolen() {
+        return isTreasureStolen;
     }
 
     public void movePlayer(final MoveDirection dir) {
