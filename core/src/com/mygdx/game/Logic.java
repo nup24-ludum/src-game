@@ -1,6 +1,7 @@
 package com.mygdx.game;
 
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Logic {
@@ -126,18 +127,20 @@ public class Logic {
     private final int fieldHeight;
     private final List<Pair> history;
 
+    private boolean isTreasureStolen; // update this when loading new level
+
     public Logic(final CellType[][] field, final Map<Pos, ThingType> thingTypeMap) {
-        // TODO make this constructor argument
         history = new ArrayList<>();
-        playerPos = thingTypeMap.entrySet()
-                .stream()
-                .filter(x -> x.getValue() == ThingType.PLAYER)
-                .map(Map.Entry::getKey)
-                .findFirst()
-                .orElseThrow();
+        playerPos = findPlayerPos(field);
         fieldHeight = field.length;
         fieldWidth = field[0].length;
-        this.thingTypeMap = new HashMap<>(thingTypeMap);
+
+        this.thingTypeMap = new HashMap<>(thingTypeMap
+                .entrySet().stream()
+                .filter(x -> x.getValue() != ThingType.PLAYER)
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
+        );
+        this.thingTypeMap.put(playerPos, ThingType.PLAYER);
 
         this.field = new Cell[fieldHeight][fieldWidth];
         for (int y = 0; y < fieldHeight; y++) {
@@ -145,16 +148,36 @@ public class Logic {
                 this.field[y][x] = new Cell(field[y][x], false);
             }
         }
+        isTreasureStolen = false;
     }
 
-    public Collection<Pair> getHistory() {
-        return Collections.unmodifiableCollection(history);
+    private Pos findPlayerPos(CellType[][] field) {
+        Pos player = new Pos(0, 0);
+        for (int i = 0; i < field.length; i++){
+            for (int j = 0; j < field[i].length; j++) {
+                if (field[i][j] == CellType.ENTRANCE) {
+                    player = new Pos(j, i);
+                }
+            }
+        }
+        return player;
+    }
+
+    public List<Pair> getHistory() {
+        return Collections.unmodifiableList(history);
+    }
+
+    public boolean getIsTreasureStolen() {
+        return isTreasureStolen;
     }
 
     public void movePlayer(final MoveDirection dir) {
         if (moveThing(playerPos, dir)) {
             playerPos = playerPos.applyDir(dir);
             history.add(new Pair(playerPos, dir));
+            if (getCell(playerPos.x, playerPos.y).type == CellType.TREASURE && ! isTreasureStolen) {
+                applyShadowToField();
+            }
         }
     }
 
@@ -188,6 +211,7 @@ public class Logic {
                     }
                 }
             }
+            isTreasureStolen = true;
         }
         for (Pair record: history) {
             Pos curPos = record.pos;
