@@ -431,7 +431,7 @@ public class View {
                     case FLOOR -> grass[((x << 16) ^ y) % grass.length];
                     case WALL -> null;
                     case ENTRANCE -> badLogic64;
-                    case TREASURE -> chest;
+                    case TREASURE -> logic.getIsTreasureStolen() ? grass[((x << 16) ^ y) % grass.length] : chest;
                 };
 
                 if (tileTexture == null) {
