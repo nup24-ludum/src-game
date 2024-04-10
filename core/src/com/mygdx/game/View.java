@@ -451,6 +451,7 @@ public class View {
             case DOWN -> new Vector3(0, -1 / 3f, 1);
         };
 
+        dec.setColor(0.8f, 0.8f, 0.8f, 1.0f);
         dec.rotateY((float)(90 * off));
         dec.setPosition(basePos.cpy().add(posOff.scl(sizeOfBlock / 2)));
 
