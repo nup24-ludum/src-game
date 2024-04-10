@@ -1,6 +1,8 @@
 package com.mygdx.game;
 
 import com.badlogic.gdx.*;
+import com.badlogic.gdx.maps.tiled.TiledMap;
+import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -92,7 +94,9 @@ public class MyGame extends ApplicationAdapter {
     * And then give it to this function.
     * TODO implement this method!
     */
-    public Logic.CellType[][] loadField() {
+
+    public Logic.CellType[][] loadField() { // backwards compatability for now
+
         Logic.Pos playerPos = new Logic.Pos(0, 0);
         int fieldWidth = 8;
         int fieldHeight = 8;
@@ -114,6 +118,7 @@ public class MyGame extends ApplicationAdapter {
                 field[i][j] = Logic.CellType.FLOOR;
             }
         }
+
 //        System.out.println("Field dump:");
 //        for (int y = 0; y < fieldHeight; y++) {
 //            for (int x = 0; x < fieldWidth; x++) {
@@ -121,9 +126,23 @@ public class MyGame extends ApplicationAdapter {
 //            }
 //            System.out.print("\n");
 //        }
-//        System.out.println("New game field os size (" + fieldWidth + ", " + fieldHeight + ")");
-//        System.out.println("Player is at " + playerPos);
+        System.out.println("New game field os size (" + fieldWidth + ", " + fieldHeight + ")");
+        System.out.println("Player is at " + playerPos);
+
+
         spawnThings(playerPos);
+        return field;
+    }
+    public Logic.CellType[][] loadField(String mapPath) {
+        TiledMap map = new TmxMapLoader().load(mapPath);
+        System.out.println(map);
+
+        // Convert to CellType
+
+        int fieldWidth = 8;
+        int fieldHeight = 8;
+        Logic.CellType[][] field = new Logic.CellType[fieldHeight][fieldWidth];
+
         return field;
     }
     //TODO all constants are hardcoded - fix!!!
