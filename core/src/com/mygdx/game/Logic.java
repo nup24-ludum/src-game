@@ -41,9 +41,8 @@ public class Logic {
         public CellType type;
         public boolean hasShadow;
 
-        Cell (CellType type, boolean hasShadow) {
+        Cell (CellType type) {
             this.type = type;
-            this.hasShadow = hasShadow;
         }
 
         public String toShortString() {
@@ -129,8 +128,7 @@ public class Logic {
     private Pos playerPos;
     private final int fieldWidth;
     private final int fieldHeight;
-    private final List<Pair> history;
-    private boolean isTreasureStolen; // update this when loading new level
+    private final List<Pair> history; // update this when loading new level
 
     private static boolean doBoxDrop = true;
 
@@ -150,10 +148,9 @@ public class Logic {
         this.field = new Cell[fieldHeight][fieldWidth];
         for (int y = 0; y < fieldHeight; y++) {
             for (int x = 0; x < fieldWidth; x++) {
-                this.field[y][x] = new Cell(field[y][x], false);
+                this.field[y][x] = new Cell(field[y][x]);
             }
         }
-        isTreasureStolen = false;
     }
 
     private Pos findPlayerPos(CellType[][] field) {
@@ -172,57 +169,12 @@ public class Logic {
         return Collections.unmodifiableList(history);
     }
 
-    public boolean getIsTreasureStolen() {
-        return isTreasureStolen;
-    }
+    public boolean getIsTreasureStolen() { return false; }
 
     public void movePlayer(final MoveDirection dir) {
         if (moveThing(playerPos, dir)) {
             playerPos = playerPos.applyDir(dir);
             history.add(new Pair(playerPos, dir));
-            if (getCell(playerPos.x, playerPos.y).type == CellType.TREASURE && ! isTreasureStolen) {
-                applyShadowToField();
-            }
-        }
-    }
-
-    // TODO should be private and called when treasure was stolen.
-    public void applyShadowToField() {
-        CellState[][] visited = new CellState[fieldHeight][fieldWidth];
-        for (CellState[] row : visited) {
-            Arrays.fill(row, CellState.UNVISITED);
-        }
-
-        for (int i = 0; i < history.size() - 1; i++) {
-            Pos currentCellPos = history.get(i).pos;
-//            getCell(currentCellPos.x, currentCellPos.y).hasShadow = true; TODO (move to another place!)
-            if ( visited[currentCellPos.y][currentCellPos.x] == CellState.UNVISITED) {
-                visited[currentCellPos.y][currentCellPos.x] = CellState.VISITED;
-            } else if (visited[currentCellPos.y][currentCellPos.x] == CellState.VISITED) {
-                int j = i - 1;
-                Pos curPosToFindCycle = history.get(j).pos;
-
-                for (;! curPosToFindCycle.equals(currentCellPos); j--) {
-                    curPosToFindCycle = history.get(j).pos;
-                    visited[curPosToFindCycle.y][curPosToFindCycle.x] = CellState.CYCLE;
-                }
-                if (! validateCycle(visited, currentCellPos, ++j)) {
-                    int h = i - 1;
-                    Pos curPos;
-                    for (; h >= j; h--) {
-                        curPos = history.get(h).pos;
-                        if (visited[curPos.y][curPos.x] == CellState.CYCLE)
-                            visited[curPos.y][curPos.x] = CellState.VISITED;
-                    }
-                }
-            }
-            isTreasureStolen = true;
-        }
-        for (Pair record: history) {
-            Pos curPos = record.pos;
-            if (visited[curPos.y][curPos.x] == CellState.VISITED) {
-                getCell(curPos.x, curPos.y).hasShadow = true;
-            }
         }
     }
 
