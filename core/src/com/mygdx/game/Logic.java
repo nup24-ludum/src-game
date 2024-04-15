@@ -149,7 +149,7 @@ public class Logic {
         return field[y][x];
     }
 
-    private final static int MOVES_PER_TURN = 3;
+    private final static int MOVES_PER_TURN = 1;
     private int moveCounter;
     private Team currTeam;
     private final Map<CellType, Boolean> isWalkable;
@@ -202,6 +202,15 @@ public class Logic {
         return thingTypeMap.entrySet()
                 .stream()
                 .filter(x -> x.getValue() == ThingType.PLAYER)
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .orElseThrow();
+    }
+
+    public Pos getWatcherPos() {
+        return thingTypeMap.entrySet()
+                .stream()
+                .filter(x -> x.getValue() == ThingType.WATCHER)
                 .map(Map.Entry::getKey)
                 .findFirst()
                 .orElseThrow();
@@ -269,24 +278,23 @@ public class Logic {
         System.out.println("Player MoveCounter: " + (moveCounter+1) + " -> " + moveCounter);
     }
 
-    public void moveEnemies() {
-        if (currTeam != Team.ENEMY || moveCounter == 0) {
+    public Team getCurrTeam() {
+        return currTeam;
+    }
+
+    public void enemiesDone() {
+        if (currTeam != Team.ENEMY) {
             return;
         }
 
-        System.out.println("Moving enemies");
-
-        switchTeams();
+        moveCounter = 0;
     }
 
-    public void finishPlayerTurn() {
-        if (currTeam == Team.PLAYER) {
-            switchTeams();
-            moveEnemies();
-        }
+    public boolean isTurnOver() {
+        return moveCounter == 0;
     }
 
-    private void switchTeams() {
+    public void switchTeams() {
         currTeam = switch (currTeam) {
             case PLAYER -> Team.ENEMY;
             case ENEMY -> Team.PLAYER;

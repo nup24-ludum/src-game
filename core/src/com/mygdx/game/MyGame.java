@@ -11,9 +11,12 @@ import java.util.*;
 public class MyGame extends ApplicationAdapter {
     private View view;
     private Logic logic;
+    private WatcherAi watcherAi;
 
     @Override
     public void create() {
+        watcherAi = new WatcherAi();
+
         final TiledMap map = new TmxMapLoader().load("loc.tmx");
         final Iterator<TiledMapTileSet> tsetIt = map.getTileSets().iterator();
 
@@ -85,14 +88,6 @@ public class MyGame extends ApplicationAdapter {
                         logic.movePlayer(Logic.MoveDirection.DOWN);
                         break;
                     }
-                    case Input.Keys.Q: {
-                        logic.buildPath(logic.getPlayerPos());
-                        break;
-                    }
-                    case Input.Keys.E: {
-                        logic.finishPlayerTurn();
-                        break;
-                    }
                 }
                 return true;
             }
@@ -142,6 +137,14 @@ public class MyGame extends ApplicationAdapter {
 
     @Override
     public void render() {
+        if (logic.isTurnOver()) {
+            logic.switchTeams();
+            if (logic.getCurrTeam() == Logic.Team.ENEMY) {
+                watcherAi.think(logic);
+                logic.enemiesDone();
+            }
+        }
+
         view.view(logic);
     }
 
