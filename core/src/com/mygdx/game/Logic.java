@@ -24,11 +24,7 @@ public class Logic {
         PLAYER,
         ENEMY,
     }
-    public enum CellState {
-        VISITED,
-        UNVISITED,
-        CYCLE
-    }
+
     public enum ThingType {
         PLAYER,
         BOX,
@@ -81,14 +77,14 @@ public class Logic {
                 return "X";
             }
 
-            switch (type) {
-                case FLOOR: return " ";
-                case WALL: return "W";
-                case ENTRANCE: return "E";
-                case TREASURE: return "$";
-            }
+            return switch (type) {
+                case FLOOR -> " ";
+                case WALL -> "W";
+                case ENTRANCE -> "E";
+                case TREASURE -> "$";
+                default -> "?";
+            };
 
-            return "?";
         }
     }
 
@@ -102,14 +98,12 @@ public class Logic {
         }
 
         public Pos applyDir(final MoveDirection dir) {
-            switch (dir) {
-                case LEFT:  return new Pos(x - 1, y);
-                case RIGHT: return new Pos(x + 1, y);
-                case UP:    return new Pos(x, y - 1);
-                case DOWN:  return new Pos(x, y + 1);
-            }
-
-            return this;
+            return switch (dir) {
+                case LEFT -> new Pos(x - 1, y);
+                case RIGHT -> new Pos(x + 1, y);
+                case UP -> new Pos(x, y - 1);
+                case DOWN -> new Pos(x, y + 1);
+            };
         }
 
         @Override
@@ -165,8 +159,6 @@ public class Logic {
     private final int fieldHeight;
     private final List<Pair> history; // update this when loading new level
     private List<Pos> path;
-
-    private static boolean doBoxDrop = true;
 
     public Logic(
             final CellType[][] field,

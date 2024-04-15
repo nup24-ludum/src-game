@@ -12,51 +12,6 @@ public class MyGame extends ApplicationAdapter {
     private View view;
     private Logic logic;
 
-
-    private final String[][][] level = new String[][][] {
-            {
-                    {"x", "x", "x", "x", "x", "x", "x"},
-                    {"x", "o", "o", "o", "o", "t", "x"},
-                    {"x", "o", "o", "o", "o", "o", "x"},
-                    {"x", "o", "o", "o", "o", "o", "x"},
-                    {"x", "o", "o", "o", "o", "o", "x"},
-                    {"x", "e", "o", "o", "o", "o", "x"},
-                    {"x", "x", "x", "x", "x", "x", "x"}
-            },
-            {
-                    {"x", "x", "x", "x", "x", "x", "x"},
-                    {"e", "o", "o", "o", "o", "o", "t"},
-                    {"x", "o", "o", "o", "o", "o", "x"},
-                    {"x", "o", "o", "o", "o", "o", "x"},
-                    {"x", "o", "o", "o", "o", "o", "x"},
-                    {"x", "o", "o", "o", "o", "o", "x"},
-                    {"x", "x", "x", "x", "x", "x", "x"}
-            },
-            {
-                    {"o", "o", "x", "x", "x", "x", "x", "o"},
-                    {"x", "x", "x", "o", "o", "o", "x", "o"},
-                    {"x", "e", "o", "b", "o", "o", "x", "o"},
-                    {"x", "x", "x", "o", "b", "o", "x", "o"},
-                    {"x", "t", "x", "x", "b", "o", "x", "o"},
-                    {"x", "o", "o", "o", "o", "o", "x", "x"},
-                    {"x", "o", "o", "b", "b", "b", "o", "x"},
-                    {"x", "o", "o", "o", "o", "o", "o", "x"},
-                    {"x", "x", "x", "x", "x", "x", "x", "x"},
-            },
-            {
-                    {"e", "o", "o", "o", "o", "o", "o", "o", "o", "o"},
-                    {"o", "b", "o", "o", "o", "o", "o", "o", "o", "o"},
-                    {"o", "o", "o", "o", "o", "o", "o", "o", "o", "o"},
-                    {"o", "o", "o", "b", "o", "o", "o", "o", "o", "o"},
-                    {"o", "o", "o", "o", "o", "o", "o", "o", "o", "o"},
-                    {"o", "o", "o", "o", "o", "o", "o", "o", "o", "o"},
-                    {"o", "o", "o", "o", "o", "o", "o", "o", "o", "o"},
-                    {"o", "o", "o", "o", "o", "o", "t", "o", "o", "o"},
-                    {"o", "o", "o", "o", "o", "o", "o", "o", "o", "o"},
-            },
-
-    };
-
     @Override
     public void create() {
         final TiledMap map = new TmxMapLoader().load("loc.tmx");
@@ -136,22 +91,6 @@ public class MyGame extends ApplicationAdapter {
                         logic.finishPlayerTurn();
                         break;
                     }
-                    case Input.Keys.NUM_1: {
-                        logic = loadHardcodedLevelAndGenerateLogic(1, isWalkable);
-                        break;
-                    }
-                    case Input.Keys.NUM_2: {
-                        logic = loadHardcodedLevelAndGenerateLogic(2, isWalkable);
-                        break;
-                    }
-                    case Input.Keys.NUM_3: {
-                        logic = loadHardcodedLevelAndGenerateLogic(3, isWalkable);
-                        break;
-                    }
-                    case Input.Keys.NUM_4: {
-                        logic = loadHardcodedLevelAndGenerateLogic(4, isWalkable);
-                        break;
-                    }
                 }
                 return true;
             }
@@ -198,56 +137,6 @@ public class MyGame extends ApplicationAdapter {
         };
         Gdx.input.setInputProcessor(inputProcessor);
     }
-    /*
-    * This is template fot loading class from libGDX interface
-    * Have to implement new function loadLevelFromFile, that construct libGDX TileMap interface.
-    * And then give it to this function.
-    * TODO implement this method!
-    */
-    public Logic.CellType[][] loadField() {
-        return null;
-    }
-
-    // for now this function is god killer
-    Logic loadHardcodedLevelAndGenerateLogic(int n, Map<Logic.CellType, Boolean> isWalkable) {
-        final String[][] levelTemplate = level[n - 1];
-        Logic.CellType[][] field;
-        HashMap<Logic.Pos, Logic.ThingType> objectsOnField = new LinkedHashMap<>();
-
-        field = new Logic.CellType[levelTemplate.length][];
-
-        for (int i = 0; i < levelTemplate.length; i++) {
-            field[i] = new Logic.CellType[levelTemplate[i].length];
-            for (int j = 0; j < levelTemplate[i].length; j++) {
-                switch (levelTemplate[i][j]) {
-                    case "o": {
-                        field[i][j] = Logic.CellType.FLOOR;
-                        break;
-                    }
-                    case "x": {
-                        field[i][j] = Logic.CellType.WALL;
-                        break;
-                    }
-                    case "t": {
-                        field[i][j] = Logic.CellType.TREASURE;
-                        break;
-                    }
-                    case "e": {
-                        field[i][j] = Logic.CellType.ENTRANCE;
-                        objectsOnField.put(new Logic.Pos(j, i), Logic.ThingType.PLAYER);
-                        break;
-                    }
-                    case "b": {
-                        field[i][j] = Logic.CellType.FLOOR;
-                        objectsOnField.put(new Logic.Pos(j, i), Logic.ThingType.BOX);
-                        break;
-                    }
-                }
-            }
-        }
-        return new Logic(field, objectsOnField, isWalkable);
-    }
-
 
     @Override
     public void render() {
