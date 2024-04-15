@@ -59,15 +59,15 @@ public class View {
                 .toArray(Texture[]::new);
 
         modelBatch = new ModelBatch();
-        cam = new PerspectiveCamera(
-                30,
-                Gdx.graphics.getWidth(),
-                Gdx.graphics.getHeight()
-        );
-//        cam = new OrthographicCamera(
-//                (float)Gdx.graphics.getWidth() / (float)Gdx.graphics.getHeight(),
-//                1f
+//        cam = new PerspectiveCamera(
+//                30,
+//                Gdx.graphics.getWidth(),
+//                Gdx.graphics.getHeight()
 //        );
+        cam = new OrthographicCamera(
+                (float)Gdx.graphics.getWidth() / (float)Gdx.graphics.getHeight(),
+                1f
+        );
 
         decalBatch = new DecalBatch(10, new CameraGroupStrategy(cam));
         shadowModels = Collections.emptyList();
