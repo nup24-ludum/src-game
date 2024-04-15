@@ -85,6 +85,10 @@ public class MyGame extends ApplicationAdapter {
                         logic.buildPath(logic.getPlayerPos());
                         break;
                     }
+                    case Input.Keys.E: {
+                        logic.finishPlayerTurn();
+                        break;
+                    }
                     case Input.Keys.NUM_1: {
                         logic = loadHardcodedLevelAndGenerateLogic(1);
                         break;

@@ -20,6 +20,10 @@ public class Logic {
             this.dir = dir;
         }
     }
+    public enum Team {
+        PLAYER,
+        ENEMY,
+    }
     public enum CellState {
         VISITED,
         UNVISITED,
@@ -127,6 +131,9 @@ public class Logic {
         return field[y][x];
     }
 
+    private final static int MOVES_PER_TURN = 3;
+    private int moveCounter;
+    private Team currTeam;
     private final Map<Pos, ThingType> thingTypeMap;
     private final Cell[][] field;
     private Pos playerPos;
@@ -143,6 +150,8 @@ public class Logic {
         playerPos = findPlayerPos(field);
         fieldHeight = field.length;
         fieldWidth = field[0].length;
+        currTeam = Team.PLAYER;
+        moveCounter = MOVES_PER_TURN;
 
         this.thingTypeMap = new HashMap<>(thingTypeMap
                 .entrySet().stream()
@@ -225,10 +234,43 @@ public class Logic {
     public boolean getIsTreasureStolen() { return false; }
 
     public void movePlayer(final MoveDirection dir) {
+        if (currTeam != Team.PLAYER || moveCounter == 0) {
+            return;
+        }
+
         if (moveThing(playerPos, dir)) {
             playerPos = playerPos.applyDir(dir);
             history.add(new Pair(playerPos, dir));
+            moveCounter--;
         }
+
+        System.out.println("Player MoveCounter: " + (moveCounter+1) + " -> " + moveCounter);
+    }
+
+    public void moveEnemies() {
+        if (currTeam != Team.ENEMY || moveCounter == 0) {
+            return;
+        }
+
+        System.out.println("Moving enemies");
+
+        switchTeams();
+    }
+
+    public void finishPlayerTurn() {
+        if (currTeam == Team.PLAYER) {
+            switchTeams();
+            moveEnemies();
+        }
+    }
+
+    private void switchTeams() {
+        currTeam = switch (currTeam) {
+            case PLAYER -> Team.ENEMY;
+            case ENEMY -> Team.PLAYER;
+        };
+
+        moveCounter = MOVES_PER_TURN;
     }
 
     private Pos findMostLeftPos(int historyIndexOfStartLower, Pos startCyclePos) {
