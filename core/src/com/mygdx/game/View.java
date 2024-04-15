@@ -80,7 +80,7 @@ public class View {
         modelBatch.begin(cam);
         modelBatch.end();
         
-	model.allThings().forEach(entry -> {
+	    model.allThings().forEach(entry -> {
             final Logic.Pos lPos = entry.getKey();
             Vector3 pos = logicToDisplay(lPos).add(sizeOfBlock / 2f, sizeOfBlock / 2f, 0.01f);
             final Logic.ThingType ty = entry.getValue();
@@ -97,10 +97,7 @@ public class View {
                     img = null;
             }
             final Decal dec = Decal.newDecal(sizeOfBlock, sizeOfBlock, new TextureRegion(img));
-            if (ty == Logic.ThingType.PLAYER) {
-                dec.setScale(2f);
-                pos = pos.add(0, sizeOfBlock / 2f, sizeOfBlock / 2f - 0.08f);
-            } else {
+            if (ty != Logic.ThingType.PLAYER) {
                 dec.setScaleY(1.5f);
                 pos = pos.add(0, sizeOfBlock / 4f, 0);
             }
