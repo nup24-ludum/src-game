@@ -41,6 +41,10 @@ public class MyGame extends ApplicationAdapter {
                         setupLevel();
                         break;
                     }
+                    case Input.Keys.Z: {
+                        logic.deployGnome(logic.getPlayerPos());
+                        break;
+                    }
                 }
                 return true;
             }
@@ -155,6 +159,8 @@ public class MyGame extends ApplicationAdapter {
             if (logic.getCurrTeam() == Logic.Team.ENEMY) {
                 watcherAi.think(logic);
                 logic.enemiesDone();
+            } else {
+                logic.tickGnome();
             }
         }
     }

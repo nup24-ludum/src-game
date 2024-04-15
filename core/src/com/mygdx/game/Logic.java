@@ -170,6 +170,8 @@ public class Logic {
     }
 
     private final static int MOVES_PER_TURN = 1;
+    private final static int GNOME_TIMER = 4;
+
     private int moveCounter;
     private Team currTeam;
     private final Map<CellType, Boolean> isWalkable;
@@ -180,6 +182,10 @@ public class Logic {
     private final int fieldHeight;
     private final List<Pair> history; // update this when loading new level
     private List<Pos> path;
+    private boolean gnomeExists = false;
+    private Pos gnomePos;
+    private int gnomeCountdown;
+    private boolean canDeployGnome;
 
     public Logic(
             final CellType[][] field,
@@ -193,6 +199,8 @@ public class Logic {
         fieldWidth = field[0].length;
         currTeam = Team.PLAYER;
         moveCounter = MOVES_PER_TURN;
+        gnomeCountdown = GNOME_TIMER;
+        canDeployGnome = true;
 
         this.isWalkable = isWalkable;
         this.thingTypeMap = new HashMap<>(thingTypeMap
@@ -240,6 +248,12 @@ public class Logic {
                 .orElseThrow();
     }
 
+    public void tickGnome() {
+        if (gnomeExists && gnomeCountdown > 0) {
+            gnomeCountdown--;
+        }
+    }
+
     public List<Pos> buildPath(Pos initPos, Pos target) {
         final Node initialNode = new Node(initPos.y, initPos.x);
         final Node finalNode = new Node(target.y, target.x);
@@ -262,18 +276,6 @@ public class Logic {
         for (int i = 0; i < field.length; i++){
             for (int j = 0; j < field[i].length; j++) {
                 if (field[i][j] == CellType.ENTRANCE) {
-                    player = new Pos(j, i);
-                }
-            }
-        }
-        return player;
-    }
-
-    private Pos findPlayerPos() {
-        Pos player = new Pos(0, 0);
-        for (int i = 0; i < field.length; i++){
-            for (int j = 0; j < field[i].length; j++) {
-                if (field[i][j].type == CellType.ENTRANCE) {
                     player = new Pos(j, i);
                 }
             }
@@ -324,6 +326,32 @@ public class Logic {
         };
 
         moveCounter = MOVES_PER_TURN;
+    }
+
+    public void killGnome() {
+        gnomeExists = false;
+    }
+
+    public void deployGnome(Logic.Pos pos) {
+        if (!canDeployGnome) {
+            return;
+        }
+
+        gnomePos = pos;
+        gnomeExists = true;
+        canDeployGnome = false;
+    }
+
+    public Pos getGnomePos() {
+        return gnomePos;
+    }
+
+    public boolean gnomeExists() {
+        return gnomeExists;
+    }
+
+    public boolean isGnomeActive() {
+        return gnomeExists && gnomeCountdown == 0;
     }
 
     private Pos findMostLeftPos(int historyIndexOfStartLower, Pos startCyclePos) {

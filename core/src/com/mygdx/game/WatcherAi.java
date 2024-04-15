@@ -23,8 +23,10 @@ public class WatcherAi {
         Rush to the player.
         */
         RUSHING_TO_PLAYER,
+        FIGHTING_GNOME,
     }
 
+    private int gnomeFightCount = 5;
     private int nextRoomToCheck = 0;
 
     private State state;
@@ -36,7 +38,13 @@ public class WatcherAi {
     public void think(final Logic logic) {
         System.out.println("AI state: " + state);
 
-        if (state != State.RUSHING_TO_PLAYER && state != State.RUSHING_TO_GNOME && isPlayerOutside(logic)) {
+        if (logic.isGnomeActive() && state != State.FIGHTING_GNOME) {
+            state = State.RUSHING_TO_GNOME;
+            System.out.println("State overriden to gnome handling");
+        } else if (state != State.RUSHING_TO_PLAYER &&
+                state != State.RUSHING_TO_GNOME &&
+                isPlayerOutside(logic)
+        ) {
             state = State.STALK;
             System.out.println("State overridden to stalking");
         }
@@ -76,10 +84,22 @@ public class WatcherAi {
                 walkToTarget(2, logic, target);
             }
             case RUSHING_TO_GNOME -> {
+                final Logic.Pos target = logic.getGnomePos();
+                if (walkToTarget(3, logic, target)) {
+                    state = State.FIGHTING_GNOME;
+                }
             }
             case RUSHING_TO_PLAYER -> {
                 final Logic.Pos target = logic.getPlayerPos();
                 walkToTarget(3, logic, target);
+            }
+            case FIGHTING_GNOME -> {
+                if (gnomeFightCount == 0) {
+                    logic.killGnome();
+                    state = State.WALKING_TO_ROOM;
+                } else {
+                    gnomeFightCount--;
+                }
             }
         }
     }

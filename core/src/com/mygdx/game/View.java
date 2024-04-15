@@ -2,31 +2,22 @@ package com.mygdx.game;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.*;
-import com.badlogic.gdx.graphics.VertexAttributes.Usage;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.graphics.g3d.Material;
-import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
-import com.badlogic.gdx.graphics.g3d.ModelInstance;
-import com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute;
-import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy;
 import com.badlogic.gdx.graphics.g3d.decals.Decal;
 import com.badlogic.gdx.graphics.g3d.decals.DecalBatch;
-import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
-import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector3;
 
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class View {
     private final ShapeRenderer debugRenderer;
     private final SpriteBatch batch;
     private final Texture playerImg;
+    private final Texture gnomeImg;
     private final Texture badLogic64;
     private final Texture boxImg;
     private final Texture watcherImg;
@@ -43,6 +34,7 @@ public class View {
         this.tileTexes = tileTexes;
         playerImg = new Texture("char.png");
         watcherImg = new Texture("demon.png");
+        gnomeImg = new Texture("gnome.png");
         boxImg = new Texture("box.png");
         debugRenderer =  new ShapeRenderer();
         batch = new SpriteBatch();
@@ -96,15 +88,16 @@ public class View {
 
             decalBatch.add(dec);
         });
+        if (model.gnomeExists()) {
+            final Logic.Pos lPos = model.getGnomePos();
+            Vector3 pos = logicToDisplay(lPos).add(sizeOfBlock / 2f, sizeOfBlock / 2f, 0.01f);
+            final Decal dec = Decal.newDecal(sizeOfBlock, sizeOfBlock, new TextureRegion(gnomeImg));
+            dec.setBlending(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+
+            dec.setPosition(pos);
+            decalBatch.add(dec);
+        }
         decalBatch.flush();
-    }
-    
-    private static Vector3 shadowWiggle(final Random rand) {
-        return new Vector3(
-                0.10f * sizeOfBlock / 2 * rand.nextFloat(-1, 1),
-                0,
-                0.10f * sizeOfBlock / 2 * rand.nextFloat(-1, 1)
-        );
     }
 
     final Logic.Pos shadowStart(final Logic logic) {
@@ -148,148 +141,6 @@ public class View {
         }
 
         return res;
-    }
-
-    private static Model buildShadow(
-            final List<Logic.Pos> points,
-            final Texture shadow,
-            final Texture shadowHand) {
-        final ModelBuilder builder = new ModelBuilder();
-        builder.begin();
-        final Random rand = new Random();
-        Vector3 prev = logicToDisplay(points.get(0))
-                .add(sizeOfBlock / 2, -0.99f, sizeOfBlock / 2);
-
-        // FIXME we probably might need a unique visual for 1-cell shadow
-        if (points.size() == 1) {
-            final MeshPartBuilder handBuilder = builder.part(
-                    "hand",
-                    GL20.GL_TRIANGLES,
-                    Usage.Position | Usage.TextureCoordinates,
-                    new Material(
-                            new BlendingAttribute(true, 1),
-                            TextureAttribute.createDiffuse(new TextureRegion(shadowHand))
-                    )
-            );
-
-            prev.add(-sizeOfBlock / 2, 0, 0);
-            final Logic.Pos pos = points.get(points.size() - 1);
-            final Vector3 end = logicToDisplay(pos)
-                    .add(sizeOfBlock / 2, -0.99f, sizeOfBlock / 2);
-            final Vector3 dir = end.cpy().sub(prev).nor();
-            final Vector3 perpNo = new Vector3(dir.z, 0, -dir.x);
-            final Vector3 perp = new Vector3(dir.z, 0, -dir.x)
-                    .scl(sizeOfBlock / 2);
-            final Vector3 ranoff = dir.cpy().scl(0.3f * sizeOfBlock / 2 * rand.nextFloat(0.2f, 1))
-                    .add(perpNo.scl( sizeOfBlock / 2 * (
-                            (0.3f * rand.nextFloat(0, 1) + 0.2f) *
-                                    (rand.nextBoolean() ? -1 : 1)
-                    )));
-            final Vector3 off = dir.cpy().scl(sizeOfBlock / 2 * 0.2f);
-            final Vector3 visend = end.cpy().add(
-                    dir.cpy().scl(sizeOfBlock / 2 * 1.2f)
-            );
-            final Vector3 prevOff = dir.cpy().scl(-sizeOfBlock / 2 * 0.4f);
-
-            handBuilder.rect(
-                    prev.cpy().add(prevOff).add(perp.cpy().scl(0.9f)),
-                    prev.cpy().add(prevOff).sub(perp.cpy().scl(0.9f)),
-                    visend.cpy().add(off).sub(perp.cpy().scl(1.2f)),
-                    visend.cpy().add(off).add(perp.cpy().scl(1.2f)),
-                    Vector3.Y
-            );
-
-            return builder.end();
-        }
-
-        final MeshPartBuilder bodyBuilder = builder.part(
-                "arm",
-                GL20.GL_TRIANGLES,
-                Usage.Position | Usage.TextureCoordinates,
-                new Material(
-                        new BlendingAttribute(true, 1),
-//                        ColorAttribute.createDiffuse(Color.BLACK)
-                        TextureAttribute.createDiffuse(new TextureRegion(shadow))
-                )
-        );
-
-        for (int i = 1; i < points.size(); i++) {
-            final Logic.Pos pos = points.get(i);
-            final Vector3 end = logicToDisplay(pos)
-                    .add(sizeOfBlock / 2, -0.99f, sizeOfBlock / 2);
-            final Vector3 dir = end.cpy().sub(prev).nor();
-            final Vector3 perpNo = new Vector3(dir.z, 0, -dir.x);
-            final Vector3 perp = new Vector3(dir.z, 0, -dir.x)
-                    .scl(sizeOfBlock / 2);
-            final Vector3 ranoff = dir.cpy().scl(0.3f * sizeOfBlock / 2 * rand.nextFloat(0.2f, 1))
-                    .add(perpNo.scl( sizeOfBlock / 2 * (
-                            (0.3f * rand.nextFloat(0, 1) + 0.2f) *
-                                    (rand.nextBoolean() ? -1 : 1)
-                    )));
-            final Vector3 off = dir.cpy().scl(sizeOfBlock / 2 * 0.2f);
-            final Vector3 visend;
-            final float endWidth;
-
-            if (i == points.size() - 1) {
-                endWidth = 0.2f;
-                visend = end.cpy().add(dir.cpy().scl(-sizeOfBlock / 2 * 0.4f));
-            } else {
-                endWidth = 0.45f;
-                visend = end.cpy().add(off).add(ranoff);
-            }
-
-            bodyBuilder.rect(
-                    prev.cpy().add(dir.cpy().scl(-sizeOfBlock / 2 * 0.1f)).add(perp.cpy().scl(0.35f)).add(shadowWiggle(rand)),
-                    prev.cpy().add(dir.cpy().scl(-sizeOfBlock / 2 * 0.1f)).sub(perp.cpy().scl(0.35f)).add(shadowWiggle(rand)),
-                    visend.cpy().sub(perp.cpy().scl(endWidth)).add(shadowWiggle(rand)),
-                    visend.cpy().add(perp.cpy().scl(endWidth)).add(shadowWiggle(rand)),
-//                    prev.cpy().add(perp.cpy().scl(0.55f)).add(shadowWiggle(rand)),
-//                    prev.cpy().sub(perp.cpy().scl(0.55f)).add(shadowWiggle(rand)),
-//                    visend.cpy().add(off).sub(perp.cpy().scl(0.65f)).add(shadowWiggle(rand)),
-//                    visend.cpy().add(off).add(perp.cpy().scl(0.65f)).add(shadowWiggle(rand)),
-                    Vector3.Y
-            );
-
-            prev = visend;
-        }
-
-        final MeshPartBuilder handBuilder = builder.part(
-                "hand",
-                GL20.GL_TRIANGLES,
-                Usage.Position | Usage.TextureCoordinates,
-                new Material(
-                        new BlendingAttribute(true, 1),
-                        TextureAttribute.createDiffuse(new TextureRegion(shadowHand))
-                )
-        );
-
-        final Logic.Pos pos = points.get(points.size() - 1);
-        final Vector3 end = logicToDisplay(pos)
-                .add(sizeOfBlock / 2, -0.99f, sizeOfBlock / 2);
-        final Vector3 dir = end.cpy().sub(prev).nor();
-        final Vector3 perpNo = new Vector3(dir.z, 0, -dir.x);
-        final Vector3 perp = new Vector3(dir.z, 0, -dir.x)
-                .scl(sizeOfBlock / 2);
-        final Vector3 ranoff = dir.cpy().scl(0.3f * sizeOfBlock / 2 * rand.nextFloat(0.2f, 1))
-                .add(perpNo.scl( sizeOfBlock / 2 * (
-                        (0.3f * rand.nextFloat(0, 1) + 0.2f) *
-                                (rand.nextBoolean() ? -1 : 1)
-                )));
-        final Vector3 off = dir.cpy().scl(sizeOfBlock / 2 * 0.2f);
-        final Vector3 visend = end.cpy().add(
-                dir.cpy().scl(sizeOfBlock / 2 * 1.2f)
-        );
-        final Vector3 prevOff = dir.cpy().scl(-sizeOfBlock / 2 * 0.4f);
-
-        handBuilder.rect(
-                prev.cpy().add(prevOff).add(perp.cpy().scl(0.9f)),
-                prev.cpy().add(prevOff).sub(perp.cpy().scl(0.9f)),
-                visend.cpy().add(off).sub(perp.cpy().scl(1.2f)),
-                visend.cpy().add(off).add(perp.cpy().scl(1.2f)),
-                Vector3.Y
-        );
-
-        return builder.end();
     }
 
     private void drawPlayerTrace(final Logic logic) {
