@@ -43,7 +43,30 @@ public class Logic {
         FLOOR,
         WALL,
         ENTRANCE,
-        TREASURE
+        TREASURE,
+        BED_BOT,
+        BED_TOP_G,
+        BED_TOP_B,
+        BED_TOP_E,
+        BED_TOP_G2,
+        BATH_FLOOR,
+        TOILET,
+        TOILET_L,
+        TOILET_M,
+        TOILET_R,
+        SHOWER_L,
+        SHOWER_R,
+        SINK_L,
+        SINK_R,
+        BL,
+        BR,
+        UL,
+        UR,
+        UR_CANDIES,
+        TUMB,
+        TUMB_COOKIE,
+        BATHROOM_FLOOR,
+        TOILET_FLOOR,
     }
     public static class Cell {
         public CellType type;
@@ -134,6 +157,7 @@ public class Logic {
     private final static int MOVES_PER_TURN = 3;
     private int moveCounter;
     private Team currTeam;
+    private final Map<CellType, Boolean> isWalkable;
     private final Map<Pos, ThingType> thingTypeMap;
     private final Cell[][] field;
     private Pos playerPos;
@@ -144,7 +168,11 @@ public class Logic {
 
     private static boolean doBoxDrop = true;
 
-    public Logic(final CellType[][] field, final Map<Pos, ThingType> thingTypeMap) {
+    public Logic(
+            final CellType[][] field,
+            final Map<Pos, ThingType> thingTypeMap,
+            final Map<CellType, Boolean> isWalkable
+            ) {
         history = new ArrayList<>();
         path = new ArrayList<>();
         playerPos = findPlayerPos(field);
@@ -153,6 +181,7 @@ public class Logic {
         currTeam = Team.PLAYER;
         moveCounter = MOVES_PER_TURN;
 
+        this.isWalkable = isWalkable;
         this.thingTypeMap = new HashMap<>(thingTypeMap
                 .entrySet().stream()
                 .filter(x -> x.getValue() != ThingType.PLAYER)
@@ -173,7 +202,7 @@ public class Logic {
     }
 
     public boolean isWalkable(int x, int y) {
-        return getCell(x, y).type != CellType.WALL;
+        return isWalkable.get(getCell(x, y).type);
     }
 
     public Pos getPlayerPos() {
@@ -306,40 +335,6 @@ public class Logic {
         return currentRightMax;
     }
 
-    private boolean validateCycle( CellState[][] visited, Pos startCyclePos, int historyIndexOfStartLower) {
-        Pos mostLeftPos = findMostLeftPos(historyIndexOfStartLower, startCyclePos);
-        Pos mostTopPos = findMostTopPos(historyIndexOfStartLower, startCyclePos);
-        int rightMostX = findRightMost(historyIndexOfStartLower, startCyclePos);
-        Pos currentPos = new Pos(mostLeftPos.x, mostTopPos.y);
-
-        for (;currentPos.y < fieldHeight; currentPos.y++){
-            boolean stepIntoCycle = false;
-            currentPos.x = mostLeftPos.x;
-            for (; currentPos.x < fieldWidth && currentPos.x <= rightMostX; currentPos.x++) {
-                if (visited[currentPos.y][currentPos.x] == CellState.UNVISITED) {
-                    if (stepIntoCycle) {
-                        return true;
-                    } else {
-                        continue;
-                    }
-                }
-                if (visited[currentPos.y][currentPos.x] == CellState.VISITED) {
-                    continue;
-                }
-                if (visited[currentPos.y][currentPos.x] == CellState.CYCLE) {
-                    if (! stepIntoCycle) {
-                        if (currentPos.x + 1 <= rightMostX && visited[currentPos.y][currentPos.x + 1] != CellState.CYCLE) {
-                            stepIntoCycle = true;
-                        }
-                    } else {
-                        break;
-                    }
-                }
-            }
-        }
-        return false;
-    }
-
     public Stream<Map.Entry<Pos, ThingType>> allThings() {
         return thingTypeMap.entrySet().stream();
     }
@@ -390,15 +385,6 @@ public class Logic {
             return false;
         }
 
-        final Cell cell = getCell(pos.x, pos.y);
-
-        if (cell.type == CellType.WALL) {
-            if (ty == null) {
-                return false;
-            }
-            return ty == ThingType.BOX && doBoxDrop;
-        }
-
-        return !cell.hasShadow;
+        return isWalkable(pos.x, pos.y);
     }
 }

@@ -29,24 +29,21 @@ public class View {
     private final Texture playerImg;
     private final Texture badLogic64;
     private final Texture boxImg;
-    private final Texture floor;
-    private final Texture chest;
+    private final Map<Logic.CellType, TextureRegion> tileTexes;
 
     /* Resources for the don't starve look */
     private final ModelBatch modelBatch;
     private final Camera cam;
     private final DecalBatch decalBatch;
 
-    private static final float sizeOfBlock = 1 / 10f * 2;
+    private static final float sizeOfBlock = 1 / 25f * 2;
 
-    View() {
+    View(Map<Logic.CellType, TextureRegion> tileTexes) {
+        this.tileTexes = tileTexes;
         playerImg = new Texture("char.png");
         boxImg = new Texture("box.png");
-//        grass = new Texture[] { new Texture("boxy.png") };
-        floor = new Texture("floor.png");
         debugRenderer =  new ShapeRenderer();
         batch = new SpriteBatch();
-        chest = new Texture("chest-2.png");
         badLogic64 = new Texture("badlogic64.jpg");
 
         modelBatch = new ModelBatch();
@@ -334,11 +331,9 @@ public class View {
                 final int ridx = (x << 16) ^ y;
                 final Logic.Pos cellLogPos = new Logic.Pos(x, y);
 
-                final Texture tileTexture = switch (cell.type) {
-                    case FLOOR -> floor;
-                    case WALL -> null;
-                    case ENTRANCE -> badLogic64;
-                    case TREASURE -> logic.getIsTreasureStolen() ? floor : chest;
+                final TextureRegion tileTexture = switch (cell.type) {
+                    case ENTRANCE -> new TextureRegion(badLogic64);
+                    default -> tileTexes.get(cell.type);
                 };
 
                 if (tileTexture == null) {
