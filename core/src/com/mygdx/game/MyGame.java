@@ -81,6 +81,10 @@ public class MyGame extends ApplicationAdapter {
                         logic.movePlayer(Logic.MoveDirection.DOWN);
                         break;
                     }
+                    case Input.Keys.Q: {
+                        logic.buildPath(logic.getPlayerPos());
+                        break;
+                    }
                     case Input.Keys.NUM_1: {
                         logic = loadHardcodedLevelAndGenerateLogic(1);
                         break;

@@ -305,7 +305,23 @@ public class View {
     }
 
     private void drawPlayerTrace(final Logic logic) {
-        /* NOOP */
+        if (logic.getPath().isEmpty()) {
+            return;
+        }
+
+        for (Logic.Pos pos : logic.getPath()) {
+            final Vector3 beg = logicToDisplay(pos)
+                    .add(sizeOfBlock / 2, sizeOfBlock / 2, 0.2f);
+
+            final Decal dec = Decal.newDecal(
+                    sizeOfBlock, sizeOfBlock,
+                    new TextureRegion(boxImg)
+            );
+            dec.setColor(1, 1, 1, 0.6f);
+            dec.setBlending(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+            dec.setPosition(beg);
+            decalBatch.add(dec);
+        }
     }
 
     private void drawField(final Logic logic) {

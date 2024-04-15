@@ -1,7 +1,11 @@
 package com.mygdx.game;
 
+import com.ai.astar.AStar;
+import com.ai.astar.Node;
+
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class Logic {
@@ -129,11 +133,13 @@ public class Logic {
     private final int fieldWidth;
     private final int fieldHeight;
     private final List<Pair> history; // update this when loading new level
+    private List<Pos> path;
 
     private static boolean doBoxDrop = true;
 
     public Logic(final CellType[][] field, final Map<Pos, ThingType> thingTypeMap) {
         history = new ArrayList<>();
+        path = new ArrayList<>();
         playerPos = findPlayerPos(field);
         fieldHeight = field.length;
         fieldWidth = field[0].length;
@@ -153,11 +159,58 @@ public class Logic {
         }
     }
 
+    public List<Pos> getPath() {
+        return path;
+    }
+
+    public boolean isWalkable(int x, int y) {
+        return getCell(x, y).type != CellType.WALL;
+    }
+
+    public Pos getPlayerPos() {
+        return thingTypeMap.entrySet()
+                .stream()
+                .filter(x -> x.getValue() == ThingType.PLAYER)
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .orElseThrow();
+    }
+
+    public void buildPath(Pos target) {
+        final Pos initPos = findPlayerPos();
+        final Node initialNode = new Node(initPos.y, initPos.x);
+        final Node finalNode = new Node(target.y, target.x);
+        AStar aStar = new AStar(fieldHeight, fieldWidth, initialNode, finalNode, 10, 10000000);
+        int[][] blocksArray = IntStream.range(0, fieldWidth)
+                .mapToObj(x -> IntStream.range(0, fieldHeight).mapToObj(y -> new Pos(x, y)))
+                .flatMap(x -> x)
+                .filter(p -> !isWalkable(p.x, p.y))
+                .map(p -> new int[]{ p.y, p.x })
+                .toArray(int[][]::new);
+        aStar.setBlocks(blocksArray);
+
+        path = aStar.findPath().stream()
+                .map(n -> new Pos(n.getCol(), n.getRow()))
+                .collect(Collectors.toList());
+    }
+
     private Pos findPlayerPos(CellType[][] field) {
         Pos player = new Pos(0, 0);
         for (int i = 0; i < field.length; i++){
             for (int j = 0; j < field[i].length; j++) {
                 if (field[i][j] == CellType.ENTRANCE) {
+                    player = new Pos(j, i);
+                }
+            }
+        }
+        return player;
+    }
+
+    private Pos findPlayerPos() {
+        Pos player = new Pos(0, 0);
+        for (int i = 0; i < field.length; i++){
+            for (int j = 0; j < field[i].length; j++) {
+                if (field[i][j].type == CellType.ENTRANCE) {
                     player = new Pos(j, i);
                 }
             }
