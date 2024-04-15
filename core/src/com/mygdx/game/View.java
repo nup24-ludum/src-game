@@ -29,6 +29,7 @@ public class View {
     private final Texture playerImg;
     private final Texture badLogic64;
     private final Texture boxImg;
+    private final Texture watcherImg;
     private final Map<Logic.CellType, TextureRegion> tileTexes;
 
     /* Resources for the don't starve look */
@@ -41,6 +42,7 @@ public class View {
     View(Map<Logic.CellType, TextureRegion> tileTexes) {
         this.tileTexes = tileTexes;
         playerImg = new Texture("char.png");
+        watcherImg = new Texture("demon.png");
         boxImg = new Texture("box.png");
         debugRenderer =  new ShapeRenderer();
         batch = new SpriteBatch();
@@ -81,23 +83,12 @@ public class View {
             final Logic.Pos lPos = entry.getKey();
             Vector3 pos = logicToDisplay(lPos).add(sizeOfBlock / 2f, sizeOfBlock / 2f, 0.01f);
             final Logic.ThingType ty = entry.getValue();
-            final Texture img;
-            switch (ty) {
-                case PLAYER:
-                    img = playerImg;
-                    break;
-                case BOX:
-                    pos = pos.add(0, 0, sizeOfBlock / 2f);
-                    img = boxImg;
-                    break;
-                default:
-                    img = null;
-            }
+            final Texture img = switch (ty) {
+                case PLAYER -> playerImg;
+                case WATCHER -> watcherImg;
+                case BOX -> boxImg;
+            };
             final Decal dec = Decal.newDecal(sizeOfBlock, sizeOfBlock, new TextureRegion(img));
-            if (ty != Logic.ThingType.PLAYER) {
-                dec.setScaleY(1.5f);
-                pos = pos.add(0, sizeOfBlock / 4f, 0);
-            }
             dec.setBlending(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 
             dec.setPosition(pos);

@@ -28,6 +28,7 @@ public class Logic {
     public enum ThingType {
         PLAYER,
         BOX,
+        WATCHER,
     }
     public enum MoveDirection {
         LEFT,

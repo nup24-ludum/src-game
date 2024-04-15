@@ -57,8 +57,10 @@ public class MyGame extends ApplicationAdapter {
         }
 
         HashMap<Logic.Pos, Logic.ThingType> objectsOnField = new LinkedHashMap<>();
+        // Place player
         field[9][4] = Logic.CellType.ENTRANCE;
-//        objectsOnField.put(new Logic.Pos(4, 9), Logic.ThingType.PLAYER);
+        // Spawn the enemy
+        objectsOnField.put(new Logic.Pos(14, 2), Logic.ThingType.WATCHER);
 
         logic = new Logic(field, objectsOnField, isWalkable);
         view = new View(tileTexes);
