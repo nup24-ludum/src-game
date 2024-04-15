@@ -30,8 +30,6 @@ public class View {
     private final Texture badLogic64;
     private final Texture boxImg;
     private final Texture floor;
-    private final Texture[] side;
-    private final Texture wall;
     private final Texture shadow;
     private final Texture shadowHand;
     private final Texture chest;
@@ -43,24 +41,13 @@ public class View {
     private final DecalBatch decalBatch;
 
     private static final float sizeOfBlock = 1 / 10f * 2;
-    private static final float wallHeight = 0.8f;
     private final Texture[] traceTexture;
-    private static final Logic.MoveDirection[] dirs = new Logic.MoveDirection[] {
-        Logic.MoveDirection.LEFT,
-        Logic.MoveDirection.RIGHT,
-        Logic.MoveDirection.UP,
-        Logic.MoveDirection.DOWN
-    };
 
     View() {
         playerImg = new Texture("char.png");
         boxImg = new Texture("box.png");
 //        grass = new Texture[] { new Texture("boxy.png") };
         floor = new Texture("floor.png");
-        side = IntStream.range(1, 4)
-                .mapToObj(x -> new Texture("flooredge" + x + ".png"))
-                .toArray(Texture[]::new);
-        wall = new Texture("wall.png");
         debugRenderer =  new ShapeRenderer();
         batch = new SpriteBatch();
         shadow = new Texture("shadow4.png");
