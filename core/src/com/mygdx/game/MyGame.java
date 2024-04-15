@@ -15,6 +15,80 @@ public class MyGame extends ApplicationAdapter {
 
     @Override
     public void create() {
+        setupLevel();
+
+        InputProcessor inputProcessor = new InputProcessor() {
+            @Override
+            public boolean keyDown(int keycode) {
+                switch (keycode) {
+                    case Input.Keys.A: {
+                        logic.movePlayer(Logic.MoveDirection.LEFT);
+                        break;
+                    }
+                    case Input.Keys.D: {
+                        logic.movePlayer(Logic.MoveDirection.RIGHT);
+                        break;
+                    }
+                    case Input.Keys.W: {
+                        logic.movePlayer(Logic.MoveDirection.UP);
+                        break;
+                    }
+                    case Input.Keys.S: {
+                        logic.movePlayer(Logic.MoveDirection.DOWN);
+                        break;
+                    }
+                    case Input.Keys.R: {
+                        setupLevel();
+                        break;
+                    }
+                }
+                return true;
+            }
+
+            @Override
+            public boolean keyUp(int keycode) {
+                return false;
+            }
+
+            @Override
+            public boolean keyTyped(char character) {
+                return false;
+            }
+
+            @Override
+            public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+                return false;
+            }
+
+            @Override
+            public boolean touchUp(int screenX, int screenY, int pointer, int button) {
+                return false;
+            }
+
+            @Override
+            public boolean touchCancelled(int screenX, int screenY, int pointer, int button) {
+                return false;
+            }
+
+            @Override
+            public boolean touchDragged(int screenX, int screenY, int pointer) {
+                return false;
+            }
+
+            @Override
+            public boolean mouseMoved(int screenX, int screenY) {
+                return false;
+            }
+
+            @Override
+            public boolean scrolled(float amountX, float amountY) {
+                return false;
+            }
+        };
+        Gdx.input.setInputProcessor(inputProcessor);
+    }
+
+    private void setupLevel() {
         watcherAi = new WatcherAi();
 
         final TiledMap map = new TmxMapLoader().load("loc.tmx");
@@ -69,72 +143,6 @@ public class MyGame extends ApplicationAdapter {
 
         logic = new Logic(field, objectsOnField, isWalkable);
         view = new View(tileTexes);
-
-        InputProcessor inputProcessor = new InputProcessor() {
-            @Override
-            public boolean keyDown(int keycode) {
-                switch (keycode) {
-                    case Input.Keys.A: {
-                        logic.movePlayer(Logic.MoveDirection.LEFT);
-                        break;
-                    }
-                    case Input.Keys.D: {
-                        logic.movePlayer(Logic.MoveDirection.RIGHT);
-                        break;
-                    }
-                    case Input.Keys.W: {
-                        logic.movePlayer(Logic.MoveDirection.UP);
-                        break;
-                    }
-                    case Input.Keys.S: {
-                        logic.movePlayer(Logic.MoveDirection.DOWN);
-                        break;
-                    }
-                }
-                return true;
-            }
-
-            @Override
-            public boolean keyUp(int keycode) {
-                return false;
-            }
-
-            @Override
-            public boolean keyTyped(char character) {
-                return false;
-            }
-
-            @Override
-            public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-                return false;
-            }
-
-            @Override
-            public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-                return false;
-            }
-
-            @Override
-            public boolean touchCancelled(int screenX, int screenY, int pointer, int button) {
-                return false;
-            }
-
-            @Override
-            public boolean touchDragged(int screenX, int screenY, int pointer) {
-                return false;
-            }
-
-            @Override
-            public boolean mouseMoved(int screenX, int screenY) {
-                return false;
-            }
-
-            @Override
-            public boolean scrolled(float amountX, float amountY) {
-                return false;
-            }
-        };
-        Gdx.input.setInputProcessor(inputProcessor);
     }
 
     private void tick() {
