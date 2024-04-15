@@ -62,6 +62,8 @@ public class MyGame extends ApplicationAdapter {
         HashMap<Logic.Pos, Logic.ThingType> objectsOnField = new LinkedHashMap<>();
         // Place player
         field[9][4] = Logic.CellType.ENTRANCE;
+        // Patch walkable info
+        isWalkable.put(Logic.CellType.ENTRANCE, true);
         // Spawn the enemy
         objectsOnField.put(new Logic.Pos(14, 2), Logic.ThingType.WATCHER);
 
@@ -135,8 +137,11 @@ public class MyGame extends ApplicationAdapter {
         Gdx.input.setInputProcessor(inputProcessor);
     }
 
-    @Override
-    public void render() {
+    private void tick() {
+        if (!logic.isPlayerAlive()) {
+            return;
+        }
+
         if (logic.isTurnOver()) {
             logic.switchTeams();
             if (logic.getCurrTeam() == Logic.Team.ENEMY) {
@@ -144,6 +149,11 @@ public class MyGame extends ApplicationAdapter {
                 logic.enemiesDone();
             }
         }
+    }
+
+    @Override
+    public void render() {
+        tick();
 
         view.view(logic);
     }

@@ -107,6 +107,26 @@ public class Logic {
             };
         }
 
+        public MoveDirection getDir(final Pos to) {
+            if (to.x == this.x) {
+                if (to.y - 1 == this.y) {
+                    return MoveDirection.DOWN;
+                }
+                if (to.y + 1 == this.y) {
+                    return MoveDirection.UP;
+                }
+            } else if (to.y == this.y) {
+                if (to.x - 1 == this.x) {
+                    return MoveDirection.RIGHT;
+                }
+                if (to.x + 1 == this.x) {
+                    return MoveDirection.LEFT;
+                }
+            }
+
+            return null;
+        }
+
         @Override
         public String toString() {
             return "(" + x + ", " + y + ")";
@@ -198,6 +218,10 @@ public class Logic {
         return isWalkable.get(getCell(x, y).type);
     }
 
+    public boolean isPlayerAlive() {
+        return thingTypeMap.values().stream().anyMatch(x -> x == ThingType.PLAYER);
+    }
+
     public Pos getPlayerPos() {
         return thingTypeMap.entrySet()
                 .stream()
@@ -216,8 +240,7 @@ public class Logic {
                 .orElseThrow();
     }
 
-    public void buildPath(Pos target) {
-        final Pos initPos = findPlayerPos();
+    public List<Pos> buildPath(Pos initPos, Pos target) {
         final Node initialNode = new Node(initPos.y, initPos.x);
         final Node finalNode = new Node(target.y, target.x);
         AStar aStar = new AStar(fieldHeight, fieldWidth, initialNode, finalNode, 10, 10000000);
@@ -229,7 +252,7 @@ public class Logic {
                 .toArray(int[][]::new);
         aStar.setBlocks(blocksArray);
 
-        path = aStar.findPath().stream()
+        return aStar.findPath().stream()
                 .map(n -> new Pos(n.getCol(), n.getRow()))
                 .collect(Collectors.toList());
     }
@@ -340,7 +363,7 @@ public class Logic {
         return thingTypeMap.entrySet().stream();
     }
 
-    private boolean moveThing(final Pos thingPos, final MoveDirection dir) {
+    public boolean moveThing(final Pos thingPos, final MoveDirection dir) {
         final Pos newThingPos = thingPos.applyDir(dir);
 
         if (!thingTypeMap.containsKey(thingPos)) {
@@ -356,24 +379,13 @@ public class Logic {
             return true;
         }
 
-        /* Obstacle at newPos. Let's try to push it away */
-        final Pos obstacleNewPos = newThingPos.applyDir(dir);
-        if (!posValid(obstacleNewPos, thingTypeMap.get(newThingPos))) {
-            return false;
-        }
-        if (thingTypeMap.containsKey(obstacleNewPos)) {
-            return false;
+        // Delete player
+        if (thingTypeMap.get(newThingPos) == ThingType.PLAYER && thingTypeMap.get(thingPos) == ThingType.WATCHER) {
+            thingTypeMap.put(newThingPos, thingTypeMap.remove(thingPos));
+            return true;
         }
 
-        final ThingType obstacle = thingTypeMap.remove(newThingPos);
-        if (getCell(obstacleNewPos.x, obstacleNewPos.y).type != CellType.WALL) {
-            thingTypeMap.put(obstacleNewPos, obstacle);
-        } else {
-            getCell(obstacleNewPos.x, obstacleNewPos.y).type = CellType.FLOOR;
-        }
-        thingTypeMap.put(newThingPos, thingTypeMap.remove(thingPos));
-
-        return true;
+        return false;
     }
 
     /* Function checks that you can go or slide a box on this position. */
