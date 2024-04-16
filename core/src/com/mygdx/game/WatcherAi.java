@@ -79,7 +79,7 @@ public class WatcherAi {
                 }
 
                 if (!isPlayerOutside(logic)) {
-                    state = State.STALK;
+                    state = State.WALKING_TO_ROOM;
                     return;
                 }
 
@@ -102,7 +102,7 @@ public class WatcherAi {
             case FIGHTING_GNOME -> {
                 if (gnomeFightCount == 0) {
                     logic.killGnome();
-                    state = State.WALKING_TO_ROOM;
+                    state = State.STALK;
                 } else {
                     gnomeFightCount--;
                 }
