@@ -186,6 +186,7 @@ public class Logic {
     private Pos gnomePos;
     private int gnomeCountdown;
     private boolean canDeployGnome;
+    private boolean isPlayerSleeping;
 
     public Logic(
             final CellType[][] field,
@@ -307,11 +308,7 @@ public class Logic {
         return currTeam;
     }
 
-    public void enemiesDone() {
-        if (currTeam != Team.ENEMY) {
-            return;
-        }
-
+    public void finishTurn() {
         moveCounter = 0;
     }
 
@@ -332,8 +329,27 @@ public class Logic {
         gnomeExists = false;
     }
 
+    public void playerToggleSleep() {
+        if (isPlayerSleeping) {
+            isPlayerSleeping = false;
+            finishTurn();
+            return;
+        }
+
+        final Logic.Pos bedPos = new Logic.Pos(4, 9);
+        if (!bedPos.equals(getPlayerPos())) {
+            return;
+        }
+
+        isPlayerSleeping = true;
+    }
+
+    public boolean isPlayerSleeping() {
+        return isPlayerSleeping;
+    }
+
     public void deployGnome(Logic.Pos pos) {
-        if (!canDeployGnome) {
+        if (!canDeployGnome || isPlayerSleeping) {
             return;
         }
 

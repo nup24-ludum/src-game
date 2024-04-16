@@ -38,7 +38,7 @@ public class WatcherAi {
     public void think(final Logic logic) {
         System.out.println("AI state: " + state);
 
-        if (logic.isGnomeActive() && state != State.FIGHTING_GNOME) {
+        if (logic.isGnomeActive() && state != State.FIGHTING_GNOME && state != State.RUSHING_TO_PLAYER) {
             state = State.RUSHING_TO_GNOME;
             System.out.println("State overriden to gnome handling");
         } else if (state != State.RUSHING_TO_PLAYER &&
@@ -62,7 +62,12 @@ public class WatcherAi {
                 } else {
                     nextRoomToCheck++;
                 }
-                state = State.WALKING_TO_ROOM;
+
+                if (meInRoom(logic) && isPlayerInRoom(logic) && !logic.isPlayerSleeping()) {
+                    state = State.RUSHING_TO_PLAYER;
+                } else {
+                    state = State.WALKING_TO_ROOM;
+                }
             }
             case STALK -> {
                 final Logic.Pos target = new Logic.Pos(7 ,5);
@@ -156,6 +161,18 @@ public class WatcherAi {
         }
 
         return false;
+    }
+
+    private boolean meInRoom(final Logic logic) {
+        final Logic.Pos playerPos = logic.getWatcherPos();
+
+        return playerPos.y >= 7 && playerPos.x < 6;
+    }
+
+    private boolean isPlayerInRoom(final Logic logic) {
+        final Logic.Pos playerPos = logic.getPlayerPos();
+
+        return playerPos.y >= 7 && playerPos.x < 6;
     }
 
     private boolean isPlayerOutside(final Logic logic) {

@@ -84,6 +84,10 @@ public class View {
             dec.setBlending(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 
             dec.setPosition(pos);
+
+            if (ty == Logic.ThingType.PLAYER && model.isPlayerSleeping()) {
+                return;
+            }
 //            dec.lookAt(cam.position, cam.up);
 
             decalBatch.add(dec);
@@ -166,17 +170,22 @@ public class View {
     private void drawField(final Logic logic) {
         for (int y = 0; y < logic.getFieldHeight(); y++) {
             for (int x = 0; x < logic.getFieldWidth(); x++) {
+                final Logic.Pos lpos = new Logic.Pos(x, y);
                 Vector3 currentCellPos = logicToDisplay(
-                        new Logic.Pos(x, y)
+                        lpos
                 ).add(sizeOfBlock / 2, sizeOfBlock / 2, 0);
                 final Logic.Cell cell = logic.getCell(x, y);
                 final int ridx = (x << 16) ^ y;
                 final Logic.Pos cellLogPos = new Logic.Pos(x, y);
 
-                final TextureRegion tileTexture = switch (cell.type) {
+                TextureRegion tileTexture = switch (cell.type) {
                     case ENTRANCE -> new TextureRegion(badLogic64);
                     default -> tileTexes.get(cell.type);
                 };
+
+                if (logic.isPlayerSleeping() && lpos.equals(new Logic.Pos(5, 8))) {
+                    tileTexture = tileTexes.get(Logic.CellType.BED_TOP_G2);
+                }
 
                 if (tileTexture == null) {
                     continue;

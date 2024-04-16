@@ -45,6 +45,14 @@ public class MyGame extends ApplicationAdapter {
                         logic.deployGnome(logic.getPlayerPos());
                         break;
                     }
+                    case Input.Keys.X: {
+                        logic.finishTurn();
+                        break;
+                    }
+                    case Input.Keys.Q: {
+                        logic.playerToggleSleep();
+                        break;
+                    }
                 }
                 return true;
             }
@@ -158,7 +166,7 @@ public class MyGame extends ApplicationAdapter {
             logic.switchTeams();
             if (logic.getCurrTeam() == Logic.Team.ENEMY) {
                 watcherAi.think(logic);
-                logic.enemiesDone();
+                logic.finishTurn();
             } else {
                 logic.tickGnome();
             }
