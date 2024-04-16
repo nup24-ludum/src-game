@@ -53,6 +53,10 @@ public class MyGame extends ApplicationAdapter {
                         logic.playerToggleSleep();
                         break;
                     }
+                    case Input.Keys.E: {
+                        logic.stealTreasure();
+                        break;
+                    }
                 }
                 return true;
             }

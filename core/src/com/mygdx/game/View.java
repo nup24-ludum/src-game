@@ -187,6 +187,10 @@ public class View {
                     tileTexture = tileTexes.get(Logic.CellType.BED_TOP_G2);
                 }
 
+                if (logic.getIsTreasureStolen() && cell.type == Logic.CellType.TUMB_COOKIE) {
+                    tileTexture = tileTexes.get(Logic.CellType.TUMB);
+                }
+
                 if (tileTexture == null) {
                     continue;
                 }

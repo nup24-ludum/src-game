@@ -43,6 +43,7 @@ public class WatcherAi {
             System.out.println("State overriden to gnome handling");
         } else if (state != State.RUSHING_TO_PLAYER &&
                 state != State.RUSHING_TO_GNOME &&
+                state != State.FIGHTING_GNOME &&
                 isPlayerOutside(logic)
         ) {
             state = State.STALK;

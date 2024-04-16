@@ -170,7 +170,7 @@ public class Logic {
     }
 
     private final static int MOVES_PER_TURN = 1;
-    private final static int GNOME_TIMER = 4;
+    private final static int GNOME_TIMER = 5;
 
     private int moveCounter;
     private Team currTeam;
@@ -187,6 +187,7 @@ public class Logic {
     private int gnomeCountdown;
     private boolean canDeployGnome;
     private boolean isPlayerSleeping;
+    private boolean isTreasureStolen;
 
     public Logic(
             final CellType[][] field,
@@ -288,7 +289,7 @@ public class Logic {
         return Collections.unmodifiableList(history);
     }
 
-    public boolean getIsTreasureStolen() { return false; }
+    public boolean getIsTreasureStolen() { return isTreasureStolen; }
 
     public void movePlayer(final MoveDirection dir) {
         if (currTeam != Team.PLAYER || moveCounter == 0) {
@@ -302,6 +303,14 @@ public class Logic {
         }
 
         System.out.println("Player MoveCounter: " + (moveCounter+1) + " -> " + moveCounter);
+    }
+
+    public void stealTreasure() {
+        final Logic.Pos pos = getPlayerPos();
+
+        if (pos.x > 6 && pos.x < 12 && pos.y > 8) {
+            isTreasureStolen = true;
+        }
     }
 
     public Team getCurrTeam() {
