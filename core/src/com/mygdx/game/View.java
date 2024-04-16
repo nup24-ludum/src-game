@@ -18,6 +18,9 @@ public class View {
     private final SpriteBatch batch;
     private final Texture playerImg;
     private final Texture gnomeImg;
+    private final Texture boyImg;
+    private final Texture boyImgSus;
+
     private final Texture badLogic64;
     private final Texture boxImg;
     private final Texture watcherImg;
@@ -33,6 +36,8 @@ public class View {
     View(Map<Logic.CellType, TextureRegion> tileTexes) {
         this.tileTexes = tileTexes;
         playerImg = new Texture("char.png");
+        boyImg = new Texture("boy.png");
+        boyImgSus = new Texture("boy_q.png");
         watcherImg = new Texture("demon.png");
         gnomeImg = new Texture("gnome.png");
         boxImg = new Texture("box.png");
@@ -54,7 +59,7 @@ public class View {
         decalBatch = new DecalBatch(10, new CameraGroupStrategy(cam));
     }
 
-    public void view(final Logic model) {
+    public void view(final Logic model, final WatcherAi ai) {
         cam.position.set(cameraPos(model));
         cam.lookAt(fieldLookAtPoint(model));
         cam.far = 300f;
@@ -77,7 +82,11 @@ public class View {
             final Logic.ThingType ty = entry.getValue();
             final Texture img = switch (ty) {
                 case PLAYER -> playerImg;
-                case WATCHER -> watcherImg;
+                case WATCHER -> switch (ai.getState()) {
+                    case RUSHING_TO_PLAYER -> watcherImg;
+                    case STALK -> boyImgSus;
+                    default -> boyImg;
+                };
                 case BOX -> boxImg;
             };
             final Decal dec = Decal.newDecal(sizeOfBlock, sizeOfBlock, new TextureRegion(img));
@@ -102,49 +111,6 @@ public class View {
             decalBatch.add(dec);
         }
         decalBatch.flush();
-    }
-
-    final Logic.Pos shadowStart(final Logic logic) {
-        final Logic.Pair pair = logic.getHistory().get(0);
-        final Logic.Pos t = pair.pos.applyDir(pair.dir);
-
-        return new Logic.Pos(
-                pair.pos.x - (t.x - pair.pos.x),
-                pair.pos.y - (t.y - pair.pos.y)
-        );
-    }
-
-    private boolean isDir(final Logic.Pos l, final Logic.Pos r) {
-        return  l.equals(r.applyDir(Logic.MoveDirection.LEFT)) ||
-                l.equals(r.applyDir(Logic.MoveDirection.RIGHT)) ||
-                l.equals(r.applyDir(Logic.MoveDirection.DOWN)) ||
-                l.equals(r.applyDir(Logic.MoveDirection.UP));
-    }
-
-    private List<List<Logic.Pos>> buildShadowSegments(final Logic logic) {
-        final List<List<Logic.Pos>> res = new ArrayList<>();
-
-        Logic.Pos prev = shadowStart(logic);
-        res.add(new ArrayList<>(Collections.singleton(prev)));
-        for (final Logic.Pair pair : logic.getHistory()) {
-            final Logic.Pos end = pair.pos;
-            if (!logic.getCell(end.x, end.y).hasShadow) {
-                continue;
-            }
-
-            if (!isDir(prev, end) && !res.get(res.size() - 1).isEmpty()) {
-                prev = end;
-
-                res.add(new ArrayList<>());
-                res.get(res.size() - 1).add(prev);
-                continue;
-            }
-
-            prev = end;
-            res.get(res.size() - 1).add(end);
-        }
-
-        return res;
     }
 
     private void drawPlayerTrace(final Logic logic) {

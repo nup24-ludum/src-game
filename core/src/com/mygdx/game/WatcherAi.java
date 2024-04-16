@@ -35,6 +35,10 @@ public class WatcherAi {
         state = State.WALKING_TO_ROOM;
     }
 
+    public State getState() {
+        return state;
+    }
+
     public void think(final Logic logic) {
         System.out.println("AI state: " + state);
 

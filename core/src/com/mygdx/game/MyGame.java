@@ -181,7 +181,7 @@ public class MyGame extends ApplicationAdapter {
     public void render() {
         tick();
 
-        view.view(logic);
+        view.view(logic, watcherAi);
     }
 
     @Override
