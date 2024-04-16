@@ -21,6 +21,7 @@ public class View {
     private final Texture boyImg;
     private final Texture boyImgSus;
 
+    private final Texture help;
     private final Texture badLogic64;
     private final Texture boxImg;
     private final Texture watcherImg;
@@ -44,6 +45,7 @@ public class View {
         debugRenderer =  new ShapeRenderer();
         batch = new SpriteBatch();
         badLogic64 = new Texture("badlogic64.jpg");
+        help = new Texture("help_window.png");
 
         modelBatch = new ModelBatch();
 //        cam = new PerspectiveCamera(
@@ -75,7 +77,7 @@ public class View {
 
         modelBatch.begin(cam);
         modelBatch.end();
-        
+
 	    model.allThings().forEach(entry -> {
             final Logic.Pos lPos = entry.getKey();
             Vector3 pos = logicToDisplay(lPos).add(sizeOfBlock / 2f, sizeOfBlock / 2f, 0.01f);
@@ -110,6 +112,13 @@ public class View {
             dec.setPosition(pos);
             decalBatch.add(dec);
         }
+
+        final Decal dec = Decal.newDecal(sizeOfBlock * 4, sizeOfBlock * 3, new TextureRegion(help));
+        dec.setBlending(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+        Vector3 pos = logicToDisplay(new Logic.Pos(18, 2)).add(sizeOfBlock / 2f, sizeOfBlock / 2f, 0.01f);
+        dec.setPosition(pos);
+        decalBatch.add(dec);
+
         decalBatch.flush();
     }
 
@@ -145,7 +154,7 @@ public class View {
                 final Logic.Pos cellLogPos = new Logic.Pos(x, y);
 
                 TextureRegion tileTexture = switch (cell.type) {
-                    case ENTRANCE -> new TextureRegion(badLogic64);
+                    case ENTRANCE -> tileTexes.get(Logic.CellType.FLOOR);
                     default -> tileTexes.get(cell.type);
                 };
 
