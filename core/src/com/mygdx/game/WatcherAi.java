@@ -79,7 +79,7 @@ public class WatcherAi {
                 }
 
                 if (!isPlayerOutside(logic)) {
-                    state = State.WALKING_TO_ROOM;
+                    state = State.STALK;
                     return;
                 }
 
