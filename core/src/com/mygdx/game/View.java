@@ -22,6 +22,9 @@ public class View {
     private final Texture boyImgSus;
 
     private final Texture help;
+    private final Texture gameover;
+    private final Texture sleeping_gg;
+    private final Texture success;
     private final Texture badLogic64;
     private final Texture boxImg;
     private final Texture watcherImg;
@@ -46,6 +49,9 @@ public class View {
         batch = new SpriteBatch();
         badLogic64 = new Texture("badlogic64.jpg");
         help = new Texture("help_window.png");
+        gameover = new Texture("fail.png");
+        success = new Texture("success.png");
+        sleeping_gg = new Texture("bed_up_gg.png");
 
         modelBatch = new ModelBatch();
 //        cam = new PerspectiveCamera(
@@ -145,7 +151,12 @@ public class View {
             dec.setPosition(pos);
             decalBatch.add(dec);
         } else if (model.isGameDone() && x > 0.99) {
-            final Decal dec = Decal.newDecal(sizeOfBlock * 4, sizeOfBlock * 3, new TextureRegion(help));
+            final Decal dec;
+            if (model.isPlayerAlive()) {
+                dec = Decal.newDecal(sizeOfBlock * 4, sizeOfBlock * 3, new TextureRegion(success));
+            } else {
+                dec = Decal.newDecal(sizeOfBlock * 4, sizeOfBlock * 3, new TextureRegion(gameover));
+            }
             dec.setBlending(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
             Vector3 pos = logicToDisplay(new Logic.Pos(9, 6)).add(sizeOfBlock / 2f, sizeOfBlock / 2f, 0.03f);
             dec.setPosition(pos);
@@ -198,7 +209,7 @@ public class View {
                 };
 
                 if (logic.isPlayerSleeping() && lpos.equals(new Logic.Pos(5, 8))) {
-                    tileTexture = tileTexes.get(Logic.CellType.BED_TOP_G2);
+                    tileTexture = new TextureRegion(sleeping_gg);
                 }
 
                 if (logic.getIsTreasureStolen() && cell.type == Logic.CellType.TUMB_COOKIE) {
