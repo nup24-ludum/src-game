@@ -54,14 +54,15 @@ public class WatcherAi {
             System.out.println("State overridden to stalking");
         }
 
+        Logic.Pos target;
         switch (state) {
-            case WALKING_TO_ROOM -> {
-                final Logic.Pos target = roomPos(nextRoomToCheck);
+            case WALKING_TO_ROOM:
+                target = roomPos(nextRoomToCheck);
                 if (walkToTarget(2, logic, target)) {
                     state = State.CHECKING;
                 }
-            }
-            case CHECKING -> {
+                break;
+            case CHECKING:
                 if (nextRoomToCheck == 2) {
                     nextRoomToCheck = 0;
                 } else {
@@ -73,9 +74,9 @@ public class WatcherAi {
                 } else {
                     state = State.WALKING_TO_ROOM;
                 }
-            }
-            case STALK -> {
-                final Logic.Pos target = new Logic.Pos(7 ,5);
+                break;
+            case STALK:
+                target = new Logic.Pos(7, 5);
 
                 if (isPlayerWrong(logic)) {
                     state = State.RUSHING_TO_PLAYER;
@@ -92,25 +93,25 @@ public class WatcherAi {
                 }
 
                 walkToTarget(2, logic, target);
-            }
-            case RUSHING_TO_GNOME -> {
-                final Logic.Pos target = logic.getGnomePos();
+                break;
+            case RUSHING_TO_GNOME:
+                target = logic.getGnomePos();
                 if (walkToTarget(3, logic, target)) {
                     state = State.FIGHTING_GNOME;
                 }
-            }
-            case RUSHING_TO_PLAYER -> {
-                final Logic.Pos target = logic.getPlayerPos();
+                break;
+            case RUSHING_TO_PLAYER:
+                target = logic.getPlayerPos();
                 walkToTarget(3, logic, target);
-            }
-            case FIGHTING_GNOME -> {
+                break;
+            case FIGHTING_GNOME:
                 if (gnomeFightCount == 0) {
                     logic.killGnome();
                     state = State.STALK;
                 } else {
                     gnomeFightCount--;
                 }
-            }
+                break;
         }
     }
 
@@ -198,17 +199,22 @@ public class WatcherAi {
         }
 
         final Logic.Pos nextPos = path.stream()
-                .skip(1).findFirst().orElseThrow();
+                .skip(1).findFirst()
+                .orElseThrow(() -> new RuntimeException("Empty path"));
 
         return mPos.getDir(nextPos);
     }
 
     private Logic.Pos roomPos(int idx) {
-        return switch (idx) {
-            case 0 -> new Logic.Pos(15, 9);
-            case 1 -> new Logic.Pos(9, 9);
-            case 2 -> new Logic.Pos(3, 9);
-            default -> throw new IllegalArgumentException();
-        };
+        switch (idx) {
+            case 0:
+                return new Logic.Pos(15, 9);
+            case 1:
+                return new Logic.Pos(9, 9);
+            case 2:
+                return new Logic.Pos(3, 9);
+            default:
+                throw new IllegalArgumentException("idx out of range");
+        }
     }
 }

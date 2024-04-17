@@ -162,6 +162,12 @@ public class MyGame extends ApplicationAdapter {
     }
 
     private void tick() {
+        logic.tickFade();
+
+        if (logic.isGameDone()) {
+            return;
+        }
+
         if (!logic.isPlayerAlive()) {
             return;
         }

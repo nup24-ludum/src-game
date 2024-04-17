@@ -82,14 +82,30 @@ public class View {
             final Logic.Pos lPos = entry.getKey();
             Vector3 pos = logicToDisplay(lPos).add(sizeOfBlock / 2f, sizeOfBlock / 2f, 0.01f);
             final Logic.ThingType ty = entry.getValue();
-            final Texture img = switch (ty) {
-                case PLAYER -> playerImg;
-                case WATCHER -> switch (ai.getState()) {
-                    case RUSHING_TO_PLAYER -> watcherImg;
-                    case STALK -> boyImgSus;
-                    default -> boyImg;
-                };
-                case BOX -> boxImg;
+            final Texture img;
+            switch (ty) {
+                case PLAYER:
+                    img = playerImg;
+                    break;
+                case WATCHER:
+                    switch (ai.getState()) {
+                        case RUSHING_TO_PLAYER:
+                            img = watcherImg;
+                            break;
+                        case STALK:
+                            img = boyImgSus;
+                            break;
+                        default:
+                            img = boyImg;
+                            break;
+                    }
+                    break;
+                case BOX:
+                    img = boxImg;
+                    break;
+                default:
+                    img = null;
+                    break;
             };
             final Decal dec = Decal.newDecal(sizeOfBlock, sizeOfBlock, new TextureRegion(img));
             dec.setBlending(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
@@ -118,6 +134,15 @@ public class View {
         Vector3 pos = logicToDisplay(new Logic.Pos(18, 2)).add(sizeOfBlock / 2f, sizeOfBlock / 2f, 0.01f);
         dec.setPosition(pos);
         decalBatch.add(dec);
+
+        final Decal dec2 = Decal.newDecal(2, 2, new TextureRegion(boxImg));
+        final float x = model.getFadePercent();
+        final float qnt = 5;
+        dec2.setColor(1, 1, 1, (float)(Math.ceil(x * qnt)) / qnt);
+        dec2.setBlending(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+        Vector3 pos2 = logicToDisplay(new Logic.Pos(9, 2)).add(sizeOfBlock / 2f, sizeOfBlock / 2f, 0.02f);
+        dec2.setPosition(pos2);
+        decalBatch.add(dec2);
 
         decalBatch.flush();
     }
@@ -153,9 +178,15 @@ public class View {
                 final int ridx = (x << 16) ^ y;
                 final Logic.Pos cellLogPos = new Logic.Pos(x, y);
 
-                TextureRegion tileTexture = switch (cell.type) {
-                    case ENTRANCE -> tileTexes.get(Logic.CellType.FLOOR);
-                    default -> tileTexes.get(cell.type);
+                TextureRegion tileTexture;
+
+                switch (cell.type) {
+                    case ENTRANCE:
+                        tileTexture = tileTexes.get(Logic.CellType.FLOOR);
+                        break;
+                    default:
+                        tileTexture = tileTexes.get(cell.type);
+                        break;
                 };
 
                 if (logic.isPlayerSleeping() && lpos.equals(new Logic.Pos(5, 8))) {

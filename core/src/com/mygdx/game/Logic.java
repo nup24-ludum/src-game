@@ -1,8 +1,5 @@
 package com.mygdx.game;
 
-import com.ai.astar.AStar;
-import com.ai.astar.Node;
-
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -78,14 +75,13 @@ public class Logic {
                 return "X";
             }
 
-            return switch (type) {
-                case FLOOR -> " ";
-                case WALL -> "W";
-                case ENTRANCE -> "E";
-                case TREASURE -> "$";
-                default -> "?";
-            };
-
+            switch (type) {
+                case FLOOR: return " ";
+                case WALL: return "W";
+                case ENTRANCE: return  "E";
+                case TREASURE: return  "$";
+                default: return "?";
+            }
         }
     }
 
@@ -99,12 +95,14 @@ public class Logic {
         }
 
         public Pos applyDir(final MoveDirection dir) {
-            return switch (dir) {
-                case LEFT -> new Pos(x - 1, y);
-                case RIGHT -> new Pos(x + 1, y);
-                case UP -> new Pos(x, y - 1);
-                case DOWN -> new Pos(x, y + 1);
-            };
+            switch (dir) {
+                case LEFT: return new Pos(x - 1, y);
+                case RIGHT: return new Pos(x + 1, y);
+                case UP: return new Pos(x, y - 1);
+                case DOWN: return new Pos(x, y + 1);
+                default:
+                    throw new IllegalStateException("Unexpected value: " + dir);
+            }
         }
 
         public MoveDirection getDir(final Pos to) {
@@ -171,6 +169,7 @@ public class Logic {
 
     private final static int MOVES_PER_TURN = 1;
     private final static int GNOME_TIMER = 5;
+    private final static int FADE_FRAMES = 60;
 
     private int moveCounter;
     private Team currTeam;
@@ -188,6 +187,7 @@ public class Logic {
     private boolean canDeployGnome;
     private boolean isPlayerSleeping;
     private boolean isTreasureStolen;
+    private int fadeCounter;
 
     public Logic(
             final CellType[][] field,
@@ -202,6 +202,7 @@ public class Logic {
         currTeam = Team.PLAYER;
         moveCounter = MOVES_PER_TURN;
         gnomeCountdown = GNOME_TIMER;
+        fadeCounter = 0;
         canDeployGnome = true;
 
         this.isWalkable = isWalkable;
@@ -238,7 +239,7 @@ public class Logic {
                 .filter(x -> x.getValue() == ThingType.PLAYER)
                 .map(Map.Entry::getKey)
                 .findFirst()
-                .orElseThrow();
+                .orElseThrow(() -> new RuntimeException("No player"));
     }
 
     public Pos getWatcherPos() {
@@ -247,7 +248,7 @@ public class Logic {
                 .filter(x -> x.getValue() == ThingType.WATCHER)
                 .map(Map.Entry::getKey)
                 .findFirst()
-                .orElseThrow();
+                .orElseThrow(() -> new RuntimeException("No watcher"));
     }
 
     public void tickGnome() {
@@ -305,8 +306,36 @@ public class Logic {
         System.out.println("Player MoveCounter: " + (moveCounter+1) + " -> " + moveCounter);
     }
 
+    public boolean isGameDone() {
+        return !isPlayerAlive() || (isTreasureStolen && isPlayerSleeping);
+    }
+
+    public void tickFade() {
+        if (isGameDone()) {
+            if (fadeCounter == 0) {
+                return;
+            }
+
+            fadeCounter--;
+        } else {
+            if (fadeCounter == FADE_FRAMES) {
+                return;
+            }
+
+            fadeCounter++;
+        }
+    }
+
+    public float getFadePercent() {
+        return 1f - ((float)fadeCounter / (float)FADE_FRAMES);
+    }
+
     public void stealTreasure() {
-        final Logic.Pos pos = getPlayerPos();
+        if (!isPlayerAlive()) {
+            return;
+        }
+
+        final Pos pos = getPlayerPos();
 
         if (pos.x > 6 && pos.x < 12 && pos.y > 8) {
             isTreasureStolen = true;
@@ -326,10 +355,14 @@ public class Logic {
     }
 
     public void switchTeams() {
-        currTeam = switch (currTeam) {
-            case PLAYER -> Team.ENEMY;
-            case ENEMY -> Team.PLAYER;
-        };
+        switch (currTeam) {
+            case PLAYER:
+                currTeam = Team.ENEMY;
+                break;
+            case ENEMY:
+                currTeam = Team.PLAYER;
+                break;
+        }
 
         moveCounter = MOVES_PER_TURN;
     }
@@ -345,7 +378,7 @@ public class Logic {
             return;
         }
 
-        final Logic.Pos bedPos = new Logic.Pos(4, 9);
+        final Pos bedPos = new Pos(4, 9);
         if (!bedPos.equals(getPlayerPos())) {
             return;
         }
@@ -357,7 +390,7 @@ public class Logic {
         return isPlayerSleeping;
     }
 
-    public void deployGnome(Logic.Pos pos) {
+    public void deployGnome(Pos pos) {
         if (!canDeployGnome || isPlayerSleeping) {
             return;
         }
