@@ -1,0 +1,72 @@
+{
+    "automappingRulesFile": "",
+    "commands": [
+    ],
+    "compatibilityVersion": 1100,
+    "extensionsPath": "extensions",
+    "folders": [
+        "."
+    ],
+    "properties": [
+    ],
+    "propertyTypes": [
+        {
+            "id": 1,
+            "name": "ty",
+            "storageType": "string",
+            "type": "enum",
+            "values": [
+                "FLOOR",
+                "WALL",
+                "BED_BOT",
+                "BED_TOP_G",
+                "BED_TOP_B",
+                "BATH_FLOOR",
+                "TOILET",
+                "TOILET_L",
+                "TOILET_M",
+                "TOILET_R",
+                "SHOWER_L",
+                "SHOWER_R",
+                "SINK_L",
+                "SINK_R",
+                "BR",
+                "UL",
+                "UR",
+                "UR_CANDIES",
+                "TUMB",
+                "TUMB_COOKIE",
+                "TOILET_FLOOR",
+                "BED_TOP_E",
+                "BED_TOP_G2",
+                "BL"
+            ],
+            "valuesAsFlags": false
+        },
+        {
+            "color": "#ffa0a0a4",
+            "drawFill": true,
+            "id": 2,
+            "members": [
+                {
+                    "name": "is_walkable",
+                    "type": "bool",
+                    "value": false
+                },
+                {
+                    "name": "java_ty",
+                    "propertyType": "ty",
+                    "type": "string",
+                    "value": "FLOOR"
+                }
+            ],
+            "name": "LevelTile",
+            "type": "class",
+            "useAs": [
+                "property",
+                "tile",
+                "project"
+            ]
+        }
+    ]
+}

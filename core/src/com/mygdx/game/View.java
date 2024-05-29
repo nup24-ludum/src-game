@@ -1,438 +1,220 @@
 package com.mygdx.game;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.PerspectiveCamera;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.VertexAttributes.Usage;
+import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.graphics.g3d.Material;
-import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
-import com.badlogic.gdx.graphics.g3d.ModelInstance;
-import com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute;
-import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy;
 import com.badlogic.gdx.graphics.g3d.decals.Decal;
 import com.badlogic.gdx.graphics.g3d.decals.DecalBatch;
-import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
-import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector3;
 
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class View {
     private final ShapeRenderer debugRenderer;
     private final SpriteBatch batch;
     private final Texture playerImg;
+    private final Texture gnomeImg;
+    private final Texture boyImg;
+    private final Texture boyImgSus;
+
+    private final Texture help;
+    private final Texture gameover;
+    private final Texture sleeping_gg;
+    private final Texture success;
     private final Texture badLogic64;
     private final Texture boxImg;
-    private final Texture[] grass;
-    private final Texture wall;
-    private final Texture shadow;
-    private final Texture shadowHand;
-    private final Texture chest;
+    private final Texture watcherImg;
+    private final Map<Logic.CellType, TextureRegion> tileTexes;
 
     /* Resources for the don't starve look */
     private final ModelBatch modelBatch;
-    private List<Model> shadowModels;
-    private final PerspectiveCamera cam;
+    private final Camera cam;
     private final DecalBatch decalBatch;
 
-    private static final float sizeOfBlock = 1 / 10f * 2;
-    private static final float wallHeight = 0.8f;
-    private final Texture[] traceTexture;
+    private static final float sizeOfBlock = 1 / 25f * 2;
 
-    View() {
+    View(Map<Logic.CellType, TextureRegion> tileTexes) {
+        this.tileTexes = tileTexes;
         playerImg = new Texture("char.png");
+        boyImg = new Texture("boy.png");
+        boyImgSus = new Texture("boy_q.png");
+        watcherImg = new Texture("demon.png");
+        gnomeImg = new Texture("gnome.png");
         boxImg = new Texture("box.png");
-//        grass = new Texture[] { new Texture("boxy.png") };
-        grass = IntStream.range(1, 7)
-                .mapToObj(x -> new Texture("grass" + x + ".png"))
-                .toArray(Texture[]::new);
-        wall = new Texture("wall.png");
         debugRenderer =  new ShapeRenderer();
         batch = new SpriteBatch();
-        shadow = new Texture("shadow4.png");
-        shadowHand = new Texture("shadowhand2.png");
-        chest = new Texture("chest-2.png");
         badLogic64 = new Texture("badlogic64.jpg");
-        traceTexture = IntStream.range(1, 4)
-                .mapToObj(x -> new Texture("trace" + x + ".png"))
-                .toArray(Texture[]::new);
+        help = new Texture("help_window.png");
+        gameover = new Texture("fail.png");
+        success = new Texture("success.png");
+        sleeping_gg = new Texture("bed_up_gg.png");
 
         modelBatch = new ModelBatch();
-        cam = new PerspectiveCamera(30, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+//        cam = new PerspectiveCamera(
+//                30,
+//                Gdx.graphics.getWidth(),
+//                Gdx.graphics.getHeight()
+//        );
+        cam = new OrthographicCamera(
+                (float)Gdx.graphics.getWidth() / (float)Gdx.graphics.getHeight(),
+                1f
+        );
 
         decalBatch = new DecalBatch(10, new CameraGroupStrategy(cam));
-        shadowModels = Collections.emptyList();
     }
 
-    public void view(final Logic model) {
+    public void view(final Logic model, final WatcherAi ai) {
         cam.position.set(cameraPos(model));
         cam.lookAt(fieldLookAtPoint(model));
         cam.far = 300f;
+//        cam.up.set(Vector3.Z.cpy().scl(-1));
         cam.update();
 
         Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
         drawField(model);
-        drawWalls(model);
         drawPlayerTrace(model);
         decalBatch.flush();
 
         modelBatch.begin(cam);
-        // FIXME this is some lame shit right here
-        if (shadowModels.isEmpty() && model.getIsTreasureStolen()) {
-            shadowModels = buildShadowSegments(model)
-                    .stream()
-                    .map(x -> buildShadow(x, shadow, shadowHand))
-                    .collect(Collectors.toList());
-        }
-        if (!shadowModels.isEmpty() && model.getIsTreasureStolen()) {
-            shadowModels.stream()
-                    .map(ModelInstance::new)
-                    .forEach(modelBatch::render);
-        } else if (!shadowModels.isEmpty()) {
-            shadowModels.forEach(Model::dispose);
-            shadowModels.clear();
-        }
         modelBatch.end();
-        
-	model.allThings().forEach(entry -> {
+
+	    model.allThings().forEach(entry -> {
             final Logic.Pos lPos = entry.getKey();
-            Vector3 pos = logicToDisplay(lPos).add(sizeOfBlock / 2f, -1f + sizeOfBlock / 2f, sizeOfBlock / 2f);
+            Vector3 pos = logicToDisplay(lPos).add(sizeOfBlock / 2f, sizeOfBlock / 2f, 0.01f);
             final Logic.ThingType ty = entry.getValue();
             final Texture img;
             switch (ty) {
                 case PLAYER:
                     img = playerImg;
                     break;
+                case WATCHER:
+                    switch (ai.getState()) {
+                        case RUSHING_TO_PLAYER:
+                            img = watcherImg;
+                            break;
+                        case STALK:
+                            img = boyImgSus;
+                            break;
+                        default:
+                            img = boyImg;
+                            break;
+                    }
+                    break;
                 case BOX:
-                    pos = pos.add(0, 0, sizeOfBlock / 2f);
                     img = boxImg;
                     break;
                 default:
                     img = null;
-            }
+                    break;
+            };
             final Decal dec = Decal.newDecal(sizeOfBlock, sizeOfBlock, new TextureRegion(img));
-            if (ty == Logic.ThingType.PLAYER) {
-                dec.setScale(2f);
-                pos = pos.add(0, sizeOfBlock / 2f, sizeOfBlock / 2f - 0.08f);
-            } else {
-                dec.setScaleY(1.5f);
-                pos = pos.add(0, sizeOfBlock / 4f, 0);
-            }
             dec.setBlending(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 
             dec.setPosition(pos);
+
+            if (ty == Logic.ThingType.PLAYER && model.isPlayerSleeping()) {
+                return;
+            }
 //            dec.lookAt(cam.position, cam.up);
 
             decalBatch.add(dec);
         });
-        decalBatch.flush();
-    }
-    
-    private static Vector3 shadowWiggle(final Random rand) {
-        return new Vector3(
-                0.10f * sizeOfBlock / 2 * rand.nextFloat(-1, 1),
-                0,
-                0.10f * sizeOfBlock / 2 * rand.nextFloat(-1, 1)
-        );
-    }
+        if (model.gnomeExists()) {
+            final Logic.Pos lPos = model.getGnomePos();
+            Vector3 pos = logicToDisplay(lPos).add(sizeOfBlock / 2f, sizeOfBlock / 2f, 0.01f);
+            final Decal dec = Decal.newDecal(sizeOfBlock, sizeOfBlock, new TextureRegion(gnomeImg));
+            dec.setBlending(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 
-    final Logic.Pos shadowStart(final Logic logic) {
-        final Logic.Pair pair = logic.getHistory().get(0);
-        final Logic.Pos t = pair.pos.applyDir(pair.dir);
-
-        return new Logic.Pos(
-                pair.pos.x - (t.x - pair.pos.x),
-                pair.pos.y - (t.y - pair.pos.y)
-        );
-    }
-
-    private boolean isDir(final Logic.Pos l, final Logic.Pos r) {
-        return  l.equals(r.applyDir(Logic.MoveDirection.LEFT)) ||
-                l.equals(r.applyDir(Logic.MoveDirection.RIGHT)) ||
-                l.equals(r.applyDir(Logic.MoveDirection.DOWN)) ||
-                l.equals(r.applyDir(Logic.MoveDirection.UP));
-    }
-
-    private List<List<Logic.Pos>> buildShadowSegments(final Logic logic) {
-        final List<List<Logic.Pos>> res = new ArrayList<>();
-
-        Logic.Pos prev = shadowStart(logic);
-        res.add(new ArrayList<>(Collections.singleton(prev)));
-        for (final Logic.Pair pair : logic.getHistory()) {
-            final Logic.Pos end = pair.pos;
-            if (!logic.getCell(end.x, end.y).hasShadow) {
-                continue;
-            }
-
-            if (!isDir(prev, end) && !res.get(res.size() - 1).isEmpty()) {
-                prev = end;
-
-                res.add(new ArrayList<>());
-                res.get(res.size() - 1).add(prev);
-                continue;
-            }
-
-            prev = end;
-            res.get(res.size() - 1).add(end);
+            dec.setPosition(pos);
+            decalBatch.add(dec);
         }
 
-        return res;
-    }
+        final Decal dec2 = Decal.newDecal(2, 2, new TextureRegion(boxImg));
+        final float x = model.getFadePercent();
+        final float qnt = 5;
+        dec2.setColor(1, 1, 1, (float)(Math.ceil(x * qnt)) / qnt);
+        dec2.setBlending(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+        Vector3 pos2 = logicToDisplay(new Logic.Pos(9, 2)).add(sizeOfBlock / 2f, sizeOfBlock / 2f, 0.02f);
+        dec2.setPosition(pos2);
+        decalBatch.add(dec2);
 
-    private static Model buildShadow(
-            final List<Logic.Pos> points,
-            final Texture shadow,
-            final Texture shadowHand) {
-        final ModelBuilder builder = new ModelBuilder();
-        builder.begin();
-        final Random rand = new Random();
-        Vector3 prev = logicToDisplay(points.get(0))
-                .add(sizeOfBlock / 2, -0.99f, sizeOfBlock / 2);
-
-        // FIXME we probably might need a unique visual for 1-cell shadow
-        if (points.size() == 1) {
-            final MeshPartBuilder handBuilder = builder.part(
-                    "hand",
-                    GL20.GL_TRIANGLES,
-                    Usage.Position | Usage.TextureCoordinates,
-                    new Material(
-                            new BlendingAttribute(true, 1),
-                            TextureAttribute.createDiffuse(new TextureRegion(shadowHand))
-                    )
-            );
-
-            prev.add(-sizeOfBlock / 2, 0, 0);
-            final Logic.Pos pos = points.get(points.size() - 1);
-            final Vector3 end = logicToDisplay(pos)
-                    .add(sizeOfBlock / 2, -0.99f, sizeOfBlock / 2);
-            final Vector3 dir = end.cpy().sub(prev).nor();
-            final Vector3 perpNo = new Vector3(dir.z, 0, -dir.x);
-            final Vector3 perp = new Vector3(dir.z, 0, -dir.x)
-                    .scl(sizeOfBlock / 2);
-            final Vector3 ranoff = dir.cpy().scl(0.3f * sizeOfBlock / 2 * rand.nextFloat(0.2f, 1))
-                    .add(perpNo.scl( sizeOfBlock / 2 * (
-                            (0.3f * rand.nextFloat(0, 1) + 0.2f) *
-                                    (rand.nextBoolean() ? -1 : 1)
-                    )));
-            final Vector3 off = dir.cpy().scl(sizeOfBlock / 2 * 0.2f);
-            final Vector3 visend = end.cpy().add(
-                    dir.cpy().scl(sizeOfBlock / 2 * 1.2f)
-            );
-            final Vector3 prevOff = dir.cpy().scl(-sizeOfBlock / 2 * 0.4f);
-
-            handBuilder.rect(
-                    prev.cpy().add(prevOff).add(perp.cpy().scl(0.9f)),
-                    prev.cpy().add(prevOff).sub(perp.cpy().scl(0.9f)),
-                    visend.cpy().add(off).sub(perp.cpy().scl(1.2f)),
-                    visend.cpy().add(off).add(perp.cpy().scl(1.2f)),
-                    Vector3.Y
-            );
-
-            return builder.end();
-        }
-
-        final MeshPartBuilder bodyBuilder = builder.part(
-                "arm",
-                GL20.GL_TRIANGLES,
-                Usage.Position | Usage.TextureCoordinates,
-                new Material(
-                        new BlendingAttribute(true, 1),
-//                        ColorAttribute.createDiffuse(Color.BLACK)
-                        TextureAttribute.createDiffuse(new TextureRegion(shadow))
-                )
-        );
-
-        for (int i = 1; i < points.size(); i++) {
-            final Logic.Pos pos = points.get(i);
-            final Vector3 end = logicToDisplay(pos)
-                    .add(sizeOfBlock / 2, -0.99f, sizeOfBlock / 2);
-            final Vector3 dir = end.cpy().sub(prev).nor();
-            final Vector3 perpNo = new Vector3(dir.z, 0, -dir.x);
-            final Vector3 perp = new Vector3(dir.z, 0, -dir.x)
-                    .scl(sizeOfBlock / 2);
-            final Vector3 ranoff = dir.cpy().scl(0.3f * sizeOfBlock / 2 * rand.nextFloat(0.2f, 1))
-                    .add(perpNo.scl( sizeOfBlock / 2 * (
-                            (0.3f * rand.nextFloat(0, 1) + 0.2f) *
-                                    (rand.nextBoolean() ? -1 : 1)
-                    )));
-            final Vector3 off = dir.cpy().scl(sizeOfBlock / 2 * 0.2f);
-            final Vector3 visend;
-            final float endWidth;
-
-            if (i == points.size() - 1) {
-                endWidth = 0.2f;
-                visend = end.cpy().add(dir.cpy().scl(-sizeOfBlock / 2 * 0.4f));
+        if (!model.isGameDone()) {
+            final Decal dec = Decal.newDecal(sizeOfBlock * 4, sizeOfBlock * 3, new TextureRegion(help));
+            dec.setBlending(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+            Vector3 pos = logicToDisplay(new Logic.Pos(18, 2)).add(sizeOfBlock / 2f, sizeOfBlock / 2f, 0.01f);
+            dec.setPosition(pos);
+            decalBatch.add(dec);
+        } else if (model.isGameDone() && x > 0.99) {
+            final Decal dec;
+            if (model.isPlayerAlive()) {
+                dec = Decal.newDecal(sizeOfBlock * 4, sizeOfBlock * 3, new TextureRegion(success));
             } else {
-                endWidth = 0.45f;
-                visend = end.cpy().add(off).add(ranoff);
+                dec = Decal.newDecal(sizeOfBlock * 4, sizeOfBlock * 3, new TextureRegion(gameover));
             }
-
-            bodyBuilder.rect(
-                    prev.cpy().add(dir.cpy().scl(-sizeOfBlock / 2 * 0.1f)).add(perp.cpy().scl(0.35f)).add(shadowWiggle(rand)),
-                    prev.cpy().add(dir.cpy().scl(-sizeOfBlock / 2 * 0.1f)).sub(perp.cpy().scl(0.35f)).add(shadowWiggle(rand)),
-                    visend.cpy().sub(perp.cpy().scl(endWidth)).add(shadowWiggle(rand)),
-                    visend.cpy().add(perp.cpy().scl(endWidth)).add(shadowWiggle(rand)),
-//                    prev.cpy().add(perp.cpy().scl(0.55f)).add(shadowWiggle(rand)),
-//                    prev.cpy().sub(perp.cpy().scl(0.55f)).add(shadowWiggle(rand)),
-//                    visend.cpy().add(off).sub(perp.cpy().scl(0.65f)).add(shadowWiggle(rand)),
-//                    visend.cpy().add(off).add(perp.cpy().scl(0.65f)).add(shadowWiggle(rand)),
-                    Vector3.Y
-            );
-
-            prev = visend;
+            dec.setBlending(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+            Vector3 pos = logicToDisplay(new Logic.Pos(9, 6)).add(sizeOfBlock / 2f, sizeOfBlock / 2f, 0.03f);
+            dec.setPosition(pos);
+            decalBatch.add(dec);
         }
 
-        final MeshPartBuilder handBuilder = builder.part(
-                "hand",
-                GL20.GL_TRIANGLES,
-                Usage.Position | Usage.TextureCoordinates,
-                new Material(
-                        new BlendingAttribute(true, 1),
-                        TextureAttribute.createDiffuse(new TextureRegion(shadowHand))
-                )
-        );
-
-        final Logic.Pos pos = points.get(points.size() - 1);
-        final Vector3 end = logicToDisplay(pos)
-                .add(sizeOfBlock / 2, -0.99f, sizeOfBlock / 2);
-        final Vector3 dir = end.cpy().sub(prev).nor();
-        final Vector3 perpNo = new Vector3(dir.z, 0, -dir.x);
-        final Vector3 perp = new Vector3(dir.z, 0, -dir.x)
-                .scl(sizeOfBlock / 2);
-        final Vector3 ranoff = dir.cpy().scl(0.3f * sizeOfBlock / 2 * rand.nextFloat(0.2f, 1))
-                .add(perpNo.scl( sizeOfBlock / 2 * (
-                        (0.3f * rand.nextFloat(0, 1) + 0.2f) *
-                                (rand.nextBoolean() ? -1 : 1)
-                )));
-        final Vector3 off = dir.cpy().scl(sizeOfBlock / 2 * 0.2f);
-        final Vector3 visend = end.cpy().add(
-                dir.cpy().scl(sizeOfBlock / 2 * 1.2f)
-        );
-        final Vector3 prevOff = dir.cpy().scl(-sizeOfBlock / 2 * 0.4f);
-
-        handBuilder.rect(
-                prev.cpy().add(prevOff).add(perp.cpy().scl(0.9f)),
-                prev.cpy().add(prevOff).sub(perp.cpy().scl(0.9f)),
-                visend.cpy().add(off).sub(perp.cpy().scl(1.2f)),
-                visend.cpy().add(off).add(perp.cpy().scl(1.2f)),
-                Vector3.Y
-        );
-
-        return builder.end();
+        decalBatch.flush();
     }
 
     private void drawPlayerTrace(final Logic logic) {
-        if (logic.getIsTreasureStolen()) {
+        if (logic.getPath().isEmpty()) {
             return;
         }
-        
-        for (final Logic.Pair pair : logic.getHistory()) {
-            // pair contains an old pos.
-            final Logic.Pos t = pair.pos.applyDir(pair.dir);
-            final Logic.Pos oldPos = new Logic.Pos(
-                    pair.pos.x - (t.x - pair.pos.x),
-                    pair.pos.y - (t.y - pair.pos.y)
-            );
 
-            final Vector3 beg = logicToDisplay(oldPos)
-                    .add(sizeOfBlock / 2, 0, sizeOfBlock / 2);
-            final Vector3 end = logicToDisplay(pair.pos)
-                    .add(sizeOfBlock / 2, 0, sizeOfBlock / 2);
-            final Vector3 tracePos = beg.cpy().scl(0.5f)
-                    .add(end.cpy().scl(0.5f));
-            tracePos.y = -0.99f;
+        for (Logic.Pos pos : logic.getPath()) {
+            final Vector3 beg = logicToDisplay(pos)
+                    .add(sizeOfBlock / 2, sizeOfBlock / 2, 0.2f);
 
-            //DrawDebugLine(beg, end);
-            int x = pair.pos.x;
-            int y = pair.pos.y;
             final Decal dec = Decal.newDecal(
-                    sizeOfBlock, sizeOfBlock * 0.45f,
-                    new TextureRegion(traceTexture[((x << 16) ^ y) % traceTexture.length])
+                    sizeOfBlock, sizeOfBlock,
+                    new TextureRegion(boxImg)
             );
             dec.setColor(1, 1, 1, 0.6f);
             dec.setBlending(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
-            dec.rotateX(-90);
-            dec.setPosition(tracePos);
-
-            switch (pair.dir) {
-                case DOWN -> dec.rotateZ(-90);
-                case LEFT -> dec.rotateZ(180);
-                case UP -> dec.rotateZ(90);
-            }
-
+            dec.setPosition(beg);
             decalBatch.add(dec);
         }
     }
-    
-    private void drawWalls(final Logic logic) {
-        final int width = logic.getFieldWidth();
-        final int height = logic.getFieldHeight();
-        final Vector3 center = fieldCenter(logic);
 
-        final Decal leftWall = Decal.newDecal(
-                (float)height * sizeOfBlock,
-                wallHeight,
-                new TextureRegion(wall) // TODO improve
-        );
-        leftWall.rotateY(90);
-        leftWall.setPosition(
-                logicToDisplay(new Logic.Pos(0, 0)).x,
-                wallHeight/2f - 1f,
-                center.z
-        );
-
-        final Decal rightWall = Decal.newDecal(
-                (float)height * sizeOfBlock,
-                wallHeight,
-                new TextureRegion(wall) // TODO improve
-        );
-        rightWall.rotateY(-90);
-        rightWall.setPosition(
-                logicToDisplay(new Logic.Pos(width, 0)).x,
-                wallHeight/2f - 1f,
-                center.z
-        );
-
-        final Decal backWall = Decal.newDecal(
-                (float)width * sizeOfBlock,
-                wallHeight,
-                new TextureRegion(wall) // TODO improve
-        );
-        backWall.setPosition(
-                center.x,
-                wallHeight/2f - 1f,
-                logicToDisplay(new Logic.Pos(0, 0)).z
-        );
-
-        decalBatch.add(leftWall);
-        decalBatch.add(rightWall);
-        decalBatch.add(backWall);
-    }
-    
     private void drawField(final Logic logic) {
         for (int y = 0; y < logic.getFieldHeight(); y++) {
             for (int x = 0; x < logic.getFieldWidth(); x++) {
+                final Logic.Pos lpos = new Logic.Pos(x, y);
                 Vector3 currentCellPos = logicToDisplay(
-                        new Logic.Pos(x, y)
-                ).add(sizeOfBlock / 2, -1, sizeOfBlock / 2);
+                        lpos
+                ).add(sizeOfBlock / 2, sizeOfBlock / 2, 0);
                 final Logic.Cell cell = logic.getCell(x, y);
+                final int ridx = (x << 16) ^ y;
+                final Logic.Pos cellLogPos = new Logic.Pos(x, y);
 
-                final Texture tileTexture = switch (cell.type) {
-                    case FLOOR -> grass[((x << 16) ^ y) % grass.length];
-                    case WALL -> null;
-                    case ENTRANCE -> badLogic64;
-                    case TREASURE -> logic.getIsTreasureStolen() ? grass[((x << 16) ^ y) % grass.length] : chest;
+                TextureRegion tileTexture;
+
+                switch (cell.type) {
+                    case ENTRANCE:
+                        tileTexture = tileTexes.get(Logic.CellType.FLOOR);
+                        break;
+                    default:
+                        tileTexture = tileTexes.get(cell.type);
+                        break;
                 };
+
+                if (logic.isPlayerSleeping() && lpos.equals(new Logic.Pos(5, 8))) {
+                    tileTexture = new TextureRegion(sleeping_gg);
+                }
+
+                if (logic.getIsTreasureStolen() && cell.type == Logic.CellType.TUMB_COOKIE) {
+                    tileTexture = tileTexes.get(Logic.CellType.TUMB);
+                }
 
                 if (tileTexture == null) {
                     continue;
@@ -442,7 +224,6 @@ public class View {
                         sizeOfBlock, sizeOfBlock,
                         new TextureRegion(tileTexture)
                 );
-                dec.rotateX(-90);
                 dec.setPosition(currentCellPos);
                 decalBatch.add(dec);
             }
@@ -450,21 +231,11 @@ public class View {
     }
 
     private Vector3 cameraPos(final Logic logic) {
-        final Vector3 camPos = fieldLookAtPoint(logic);
-
-        camPos.y = 1.5f + (1 - (float)logic.getFieldHeight()/10f) * 1.2f;
-        camPos.z = 3.0f - (1 - (float)logic.getFieldHeight()/10f) * 3.0f;
-
-        return camPos;
+        return fieldCenter(logic).add(0, 0, 4f);
     }
 
     private Vector3 fieldLookAtPoint(final Logic logic) {
-        final Vector3 center = fieldCenter(logic);
-
-        /* Looking at a point slightly above -1f improves the overall feel */
-        center.y = -0.8f;
-
-        return center;
+        return fieldCenter(logic);
     }
 
     private Vector3 fieldCenter(final Logic logic) {
@@ -478,11 +249,8 @@ public class View {
         }
 
         if (height % 2 == 1) {
-            center.z += sizeOfBlock / 2f;
+            center.y += sizeOfBlock / 2f;
         }
-
-        /* The actual y of tiles */
-        center.y = -1f;
 
         return center;
     }
@@ -490,11 +258,13 @@ public class View {
     public static Vector3 logicToDisplay(
             final Logic.Pos lPos
     ) {
-        return new Vector3(
+        Vector3 prePos = new Vector3(
                 (float)lPos.x,
-                0f,
-                (float)lPos.y
-        ).scl(sizeOfBlock).add(-1, 0, -1);
+                (float)lPos.y,
+                0f
+        ).scl(sizeOfBlock);
+
+        return new Vector3(prePos.x, 2 - prePos.y, prePos.z);
     }
 
     public void dispose() {
@@ -502,6 +272,5 @@ public class View {
         batch.dispose();
 
         modelBatch.dispose();
-        shadowModels.forEach(Model::dispose);
     }
 }

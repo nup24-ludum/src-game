@@ -2,6 +2,7 @@ package com.mygdx.game;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class Logic {
@@ -16,14 +17,15 @@ public class Logic {
             this.dir = dir;
         }
     }
-    public enum CellState {
-        VISITED,
-        UNVISITED,
-        CYCLE
+    public enum Team {
+        PLAYER,
+        ENEMY,
     }
+
     public enum ThingType {
         PLAYER,
         BOX,
+        WATCHER,
     }
     public enum MoveDirection {
         LEFT,
@@ -35,15 +37,37 @@ public class Logic {
         FLOOR,
         WALL,
         ENTRANCE,
-        TREASURE
+        TREASURE,
+        BED_BOT,
+        BED_TOP_G,
+        BED_TOP_B,
+        BED_TOP_E,
+        BED_TOP_G2,
+        BATH_FLOOR,
+        TOILET,
+        TOILET_L,
+        TOILET_M,
+        TOILET_R,
+        SHOWER_L,
+        SHOWER_R,
+        SINK_L,
+        SINK_R,
+        BL,
+        BR,
+        UL,
+        UR,
+        UR_CANDIES,
+        TUMB,
+        TUMB_COOKIE,
+        BATHROOM_FLOOR,
+        TOILET_FLOOR,
     }
     public static class Cell {
         public CellType type;
         public boolean hasShadow;
 
-        Cell (CellType type, boolean hasShadow) {
+        Cell (CellType type) {
             this.type = type;
-            this.hasShadow = hasShadow;
         }
 
         public String toShortString() {
@@ -54,11 +78,10 @@ public class Logic {
             switch (type) {
                 case FLOOR: return " ";
                 case WALL: return "W";
-                case ENTRANCE: return "E";
-                case TREASURE: return "$";
+                case ENTRANCE: return  "E";
+                case TREASURE: return  "$";
+                default: return "?";
             }
-
-            return "?";
         }
     }
 
@@ -73,13 +96,33 @@ public class Logic {
 
         public Pos applyDir(final MoveDirection dir) {
             switch (dir) {
-                case LEFT:  return new Pos(x - 1, y);
+                case LEFT: return new Pos(x - 1, y);
                 case RIGHT: return new Pos(x + 1, y);
-                case UP:    return new Pos(x, y - 1);
-                case DOWN:  return new Pos(x, y + 1);
+                case UP: return new Pos(x, y - 1);
+                case DOWN: return new Pos(x, y + 1);
+                default:
+                    throw new IllegalStateException("Unexpected value: " + dir);
+            }
+        }
+
+        public MoveDirection getDir(final Pos to) {
+            if (to.x == this.x) {
+                if (to.y - 1 == this.y) {
+                    return MoveDirection.DOWN;
+                }
+                if (to.y + 1 == this.y) {
+                    return MoveDirection.UP;
+                }
+            } else if (to.y == this.y) {
+                if (to.x - 1 == this.x) {
+                    return MoveDirection.RIGHT;
+                }
+                if (to.x + 1 == this.x) {
+                    return MoveDirection.LEFT;
+                }
             }
 
-            return this;
+            return null;
         }
 
         @Override
@@ -117,25 +160,52 @@ public class Logic {
     }
 
     public Cell getCell(final int x, final int y) {
+        if (x < 0) { return null; }
+        if (y < 0) { return null; }
+        if (x >= fieldWidth) { return null; }
+        if (y >= fieldHeight) { return null; }
         return field[y][x];
     }
 
+    private final static int MOVES_PER_TURN = 1;
+    private final static int GNOME_TIMER = 5;
+    private final static int FADE_FRAMES = 60;
+
+    private int moveCounter;
+    private Team currTeam;
+    private final Map<CellType, Boolean> isWalkable;
     private final Map<Pos, ThingType> thingTypeMap;
     private final Cell[][] field;
     private Pos playerPos;
     private final int fieldWidth;
     private final int fieldHeight;
-    private final List<Pair> history;
-    private boolean isTreasureStolen; // update this when loading new level
+    private final List<Pair> history; // update this when loading new level
+    private List<Pos> path;
+    private boolean gnomeExists = false;
+    private Pos gnomePos;
+    private int gnomeCountdown;
+    private boolean canDeployGnome;
+    private boolean isPlayerSleeping;
+    private boolean isTreasureStolen;
+    private int fadeCounter;
 
-    private static boolean doBoxDrop = true;
-
-    public Logic(final CellType[][] field, final Map<Pos, ThingType> thingTypeMap) {
+    public Logic(
+            final CellType[][] field,
+            final Map<Pos, ThingType> thingTypeMap,
+            final Map<CellType, Boolean> isWalkable
+            ) {
         history = new ArrayList<>();
+        path = new ArrayList<>();
         playerPos = findPlayerPos(field);
         fieldHeight = field.length;
         fieldWidth = field[0].length;
+        currTeam = Team.PLAYER;
+        moveCounter = MOVES_PER_TURN;
+        gnomeCountdown = GNOME_TIMER;
+        fadeCounter = 0;
+        canDeployGnome = true;
 
+        this.isWalkable = isWalkable;
         this.thingTypeMap = new HashMap<>(thingTypeMap
                 .entrySet().stream()
                 .filter(x -> x.getValue() != ThingType.PLAYER)
@@ -146,10 +216,62 @@ public class Logic {
         this.field = new Cell[fieldHeight][fieldWidth];
         for (int y = 0; y < fieldHeight; y++) {
             for (int x = 0; x < fieldWidth; x++) {
-                this.field[y][x] = new Cell(field[y][x], false);
+                this.field[y][x] = new Cell(field[y][x]);
             }
         }
-        isTreasureStolen = false;
+    }
+
+    public List<Pos> getPath() {
+        return path;
+    }
+
+    public boolean isWalkable(int x, int y) {
+        return isWalkable.get(getCell(x, y).type);
+    }
+
+    public boolean isPlayerAlive() {
+        return thingTypeMap.values().stream().anyMatch(x -> x == ThingType.PLAYER);
+    }
+
+    public Pos getPlayerPos() {
+        return thingTypeMap.entrySet()
+                .stream()
+                .filter(x -> x.getValue() == ThingType.PLAYER)
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("No player"));
+    }
+
+    public Pos getWatcherPos() {
+        return thingTypeMap.entrySet()
+                .stream()
+                .filter(x -> x.getValue() == ThingType.WATCHER)
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("No watcher"));
+    }
+
+    public void tickGnome() {
+        if (gnomeExists && gnomeCountdown > 0) {
+            gnomeCountdown--;
+        }
+    }
+
+    public List<Pos> buildPath(Pos initPos, Pos target) {
+        final Node initialNode = new Node(initPos.y, initPos.x);
+        final Node finalNode = new Node(target.y, target.x);
+        AStar aStar = new AStar(fieldHeight, fieldWidth, initialNode, finalNode, 10, 10000000);
+        int[][] blocksArray = IntStream.range(0, fieldWidth)
+                .mapToObj(x -> IntStream.range(0, fieldHeight).mapToObj(y -> new Pos(x, y)))
+                .flatMap(x -> x)
+                .filter(p -> !isWalkable(p.x, p.y))
+                .map(p -> new int[]{ p.y, p.x })
+                .toArray(int[][]::new);
+        aStar.setBlocks(blocksArray);
+
+        return aStar.findPath().stream()
+                .map(n -> new Pos(n.getCol(), n.getRow()))
+                .collect(Collectors.toList());
     }
 
     private Pos findPlayerPos(CellType[][] field) {
@@ -168,58 +290,126 @@ public class Logic {
         return Collections.unmodifiableList(history);
     }
 
-    public boolean getIsTreasureStolen() {
-        return isTreasureStolen;
-    }
+    public boolean getIsTreasureStolen() { return isTreasureStolen; }
 
     public void movePlayer(final MoveDirection dir) {
+        if (currTeam != Team.PLAYER || moveCounter == 0) {
+            return;
+        }
+
         if (moveThing(playerPos, dir)) {
             playerPos = playerPos.applyDir(dir);
             history.add(new Pair(playerPos, dir));
-            if (getCell(playerPos.x, playerPos.y).type == CellType.TREASURE && ! isTreasureStolen) {
-                applyShadowToField();
+            moveCounter--;
+        }
+
+        System.out.println("Player MoveCounter: " + (moveCounter+1) + " -> " + moveCounter);
+    }
+
+    public boolean isGameDone() {
+        return !isPlayerAlive() || (isTreasureStolen && isPlayerSleeping);
+    }
+
+    public void tickFade() {
+        if (isGameDone()) {
+            if (fadeCounter == 0) {
+                return;
             }
+
+            fadeCounter--;
+        } else {
+            if (fadeCounter == FADE_FRAMES) {
+                return;
+            }
+
+            fadeCounter++;
         }
     }
 
-    // TODO should be private and called when treasure was stolen.
-    public void applyShadowToField() {
-        CellState[][] visited = new CellState[fieldHeight][fieldWidth];
-        for (CellState[] row : visited) {
-            Arrays.fill(row, CellState.UNVISITED);
+    public float getFadePercent() {
+        return 1f - ((float)fadeCounter / (float)FADE_FRAMES);
+    }
+
+    public void stealTreasure() {
+        if (!isPlayerAlive()) {
+            return;
         }
 
-        for (int i = 0; i < history.size() - 1; i++) {
-            Pos currentCellPos = history.get(i).pos;
-//            getCell(currentCellPos.x, currentCellPos.y).hasShadow = true; TODO (move to another place!)
-            if ( visited[currentCellPos.y][currentCellPos.x] == CellState.UNVISITED) {
-                visited[currentCellPos.y][currentCellPos.x] = CellState.VISITED;
-            } else if (visited[currentCellPos.y][currentCellPos.x] == CellState.VISITED) {
-                int j = i - 1;
-                Pos curPosToFindCycle = history.get(j).pos;
+        final Pos pos = getPlayerPos();
 
-                for (;! curPosToFindCycle.equals(currentCellPos); j--) {
-                    curPosToFindCycle = history.get(j).pos;
-                    visited[curPosToFindCycle.y][curPosToFindCycle.x] = CellState.CYCLE;
-                }
-                if (! validateCycle(visited, currentCellPos, ++j)) {
-                    int h = i - 1;
-                    Pos curPos;
-                    for (; h >= j; h--) {
-                        curPos = history.get(h).pos;
-                        if (visited[curPos.y][curPos.x] == CellState.CYCLE)
-                            visited[curPos.y][curPos.x] = CellState.VISITED;
-                    }
-                }
-            }
+        if (pos.x > 6 && pos.x < 12 && pos.y > 8) {
             isTreasureStolen = true;
         }
-        for (Pair record: history) {
-            Pos curPos = record.pos;
-            if (visited[curPos.y][curPos.x] == CellState.VISITED) {
-                getCell(curPos.x, curPos.y).hasShadow = true;
-            }
+    }
+
+    public Team getCurrTeam() {
+        return currTeam;
+    }
+
+    public void finishTurn() {
+        moveCounter = 0;
+    }
+
+    public boolean isTurnOver() {
+        return moveCounter == 0;
+    }
+
+    public void switchTeams() {
+        switch (currTeam) {
+            case PLAYER:
+                currTeam = Team.ENEMY;
+                break;
+            case ENEMY:
+                currTeam = Team.PLAYER;
+                break;
         }
+
+        moveCounter = MOVES_PER_TURN;
+    }
+
+    public void killGnome() {
+        gnomeExists = false;
+    }
+
+    public void playerToggleSleep() {
+        if (isPlayerSleeping) {
+            isPlayerSleeping = false;
+            finishTurn();
+            return;
+        }
+
+        final Pos bedPos = new Pos(4, 9);
+        if (!bedPos.equals(getPlayerPos())) {
+            return;
+        }
+
+        isPlayerSleeping = true;
+    }
+
+    public boolean isPlayerSleeping() {
+        return isPlayerSleeping;
+    }
+
+    public void deployGnome(Pos pos) {
+        if (!canDeployGnome || isPlayerSleeping) {
+            return;
+        }
+
+        gnomePos = pos;
+        gnomeExists = true;
+        canDeployGnome = false;
+    }
+
+    public Pos getGnomePos() {
+        return gnomePos;
+    }
+
+    public boolean gnomeExists() {
+        return gnomeExists;
+    }
+
+    public boolean isGnomeActive() {
+        return gnomeExists && gnomeCountdown == 0;
     }
 
     private Pos findMostLeftPos(int historyIndexOfStartLower, Pos startCyclePos) {
@@ -255,45 +445,11 @@ public class Logic {
         return currentRightMax;
     }
 
-    private boolean validateCycle( CellState[][] visited, Pos startCyclePos, int historyIndexOfStartLower) {
-        Pos mostLeftPos = findMostLeftPos(historyIndexOfStartLower, startCyclePos);
-        Pos mostTopPos = findMostTopPos(historyIndexOfStartLower, startCyclePos);
-        int rightMostX = findRightMost(historyIndexOfStartLower, startCyclePos);
-        Pos currentPos = new Pos(mostLeftPos.x, mostTopPos.y);
-
-        for (;currentPos.y < fieldHeight; currentPos.y++){
-            boolean stepIntoCycle = false;
-            currentPos.x = mostLeftPos.x;
-            for (; currentPos.x < fieldWidth && currentPos.x <= rightMostX; currentPos.x++) {
-                if (visited[currentPos.y][currentPos.x] == CellState.UNVISITED) {
-                    if (stepIntoCycle) {
-                        return true;
-                    } else {
-                        continue;
-                    }
-                }
-                if (visited[currentPos.y][currentPos.x] == CellState.VISITED) {
-                    continue;
-                }
-                if (visited[currentPos.y][currentPos.x] == CellState.CYCLE) {
-                    if (! stepIntoCycle) {
-                        if (currentPos.x + 1 <= rightMostX && visited[currentPos.y][currentPos.x + 1] != CellState.CYCLE) {
-                            stepIntoCycle = true;
-                        }
-                    } else {
-                        break;
-                    }
-                }
-            }
-        }
-        return false;
-    }
-
     public Stream<Map.Entry<Pos, ThingType>> allThings() {
         return thingTypeMap.entrySet().stream();
     }
 
-    private boolean moveThing(final Pos thingPos, final MoveDirection dir) {
+    public boolean moveThing(final Pos thingPos, final MoveDirection dir) {
         final Pos newThingPos = thingPos.applyDir(dir);
 
         if (!thingTypeMap.containsKey(thingPos)) {
@@ -309,24 +465,13 @@ public class Logic {
             return true;
         }
 
-        /* Obstacle at newPos. Let's try to push it away */
-        final Pos obstacleNewPos = newThingPos.applyDir(dir);
-        if (!posValid(obstacleNewPos, thingTypeMap.get(newThingPos))) {
-            return false;
-        }
-        if (thingTypeMap.containsKey(obstacleNewPos)) {
-            return false;
+        // Delete player
+        if (thingTypeMap.get(newThingPos) == ThingType.PLAYER && thingTypeMap.get(thingPos) == ThingType.WATCHER) {
+            thingTypeMap.put(newThingPos, thingTypeMap.remove(thingPos));
+            return true;
         }
 
-        final ThingType obstacle = thingTypeMap.remove(newThingPos);
-        if (getCell(obstacleNewPos.x, obstacleNewPos.y).type != CellType.WALL) {
-            thingTypeMap.put(obstacleNewPos, obstacle);
-        } else {
-            getCell(obstacleNewPos.x, obstacleNewPos.y).type = CellType.FLOOR;
-        }
-        thingTypeMap.put(newThingPos, thingTypeMap.remove(thingPos));
-
-        return true;
+        return false;
     }
 
     /* Function checks that you can go or slide a box on this position. */
@@ -339,15 +484,6 @@ public class Logic {
             return false;
         }
 
-        final Cell cell = getCell(pos.x, pos.y);
-
-        if (cell.type == CellType.WALL) {
-            if (ty == null) {
-                return false;
-            }
-            return ty == ThingType.BOX && doBoxDrop;
-        }
-
-        return !cell.hasShadow;
+        return isWalkable(pos.x, pos.y);
     }
 }
