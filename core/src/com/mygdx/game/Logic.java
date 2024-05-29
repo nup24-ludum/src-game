@@ -4,6 +4,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Sound;
 
 public class Logic {
     // TODO things probably should be made into classes
@@ -61,6 +63,7 @@ public class Logic {
         TUMB_COOKIE,
         BATHROOM_FLOOR,
         TOILET_FLOOR,
+        DOOR,
     }
     public static class Cell {
         public CellType type;
@@ -292,15 +295,70 @@ public class Logic {
 
     public boolean getIsTreasureStolen() { return isTreasureStolen; }
 
+    public void playSound() {
+        try {
+            // Загружаем звуковой файл
+            Sound sound = Gdx.audio.newSound(Gdx.files.internal("door.wav"));
+
+            // Воспроизводим звук
+            sound.play(0.2f);
+
+            System.out.println("Music played");
+
+            // Освобождаем ресурсы после воспроизведения звука
+            // sound.dispose();
+        } catch (Exception e) {
+            System.err.println("Error playing sound: " + e.getMessage());
+        }
+    }
+
     public void movePlayer(final MoveDirection dir) {
         if (currTeam != Team.PLAYER || moveCounter == 0) {
             return;
         }
 
+        int oldX = playerPos.x;
+        int oldY = playerPos.y;
+
         if (moveThing(playerPos, dir)) {
             playerPos = playerPos.applyDir(dir);
             history.add(new Pair(playerPos, dir));
             moveCounter--;
+
+            // Проверяем, изменились ли координаты на (3, 7)
+            if ((oldX == 3 && oldY == 7 && playerPos.x == 3 && playerPos.y == 6)
+                || (oldX == 3 && oldY == 6 && playerPos.x == 3 && playerPos.y == 7)) {
+                // Воспроизводим звук
+                playSound();
+            }
+
+            if ((oldX == 3 && oldY == 4 && playerPos.x == 3 && playerPos.y == 3)
+                || (oldX == 3 && oldY == 3 && playerPos.x == 3 && playerPos.y == 4)) {
+                // Воспроизводим звук
+                playSound();
+            }
+
+            if ((oldX == 8 && oldY == 3 && playerPos.x == 8 && playerPos.y == 4)
+                || (oldX == 8 && oldY == 4 && playerPos.x == 8 && playerPos.y == 3)) {
+                // Воспроизводим звук
+                playSound();
+            }
+
+            if ((oldX == 9 && oldY == 7 && playerPos.x == 9 && playerPos.y == 6)
+                || (oldX == 9 && oldY == 6 && playerPos.x == 9 && playerPos.y == 7)) {
+                // Воспроизводим звук
+                playSound();
+            }
+            if ((oldX == 15 && oldY == 7 && playerPos.x == 15 && playerPos.y == 6)
+                || (oldX == 15 && oldY == 6 && playerPos.x == 15 && playerPos.y == 7)) {
+                // Воспроизводим звук
+                playSound();
+            }
+            if ((oldX == 15 && oldY == 3 && playerPos.x == 15 && playerPos.y == 4)
+                || (oldX == 15 && oldY == 4 && playerPos.x == 15 && playerPos.y == 3)) {
+                // Воспроизводим звук
+                playSound();
+            }
         }
 
         System.out.println("Player MoveCounter: " + (moveCounter+1) + " -> " + moveCounter);

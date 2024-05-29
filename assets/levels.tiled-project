@@ -11,6 +11,31 @@
     ],
     "propertyTypes": [
         {
+            "color": "#ffa0a0a4",
+            "drawFill": true,
+            "id": 2,
+            "members": [
+                {
+                    "name": "is_walkable",
+                    "type": "bool",
+                    "value": false
+                },
+                {
+                    "name": "java_ty",
+                    "propertyType": "ty",
+                    "type": "string",
+                    "value": "FLOOR"
+                }
+            ],
+            "name": "LevelTile",
+            "type": "class",
+            "useAs": [
+                "property",
+                "tile",
+                "project"
+            ]
+        },
+        {
             "id": 1,
             "name": "ty",
             "storageType": "string",
@@ -39,34 +64,10 @@
                 "TOILET_FLOOR",
                 "BED_TOP_E",
                 "BED_TOP_G2",
-                "BL"
+                "BL",
+                "DOOR"
             ],
             "valuesAsFlags": false
-        },
-        {
-            "color": "#ffa0a0a4",
-            "drawFill": true,
-            "id": 2,
-            "members": [
-                {
-                    "name": "is_walkable",
-                    "type": "bool",
-                    "value": false
-                },
-                {
-                    "name": "java_ty",
-                    "propertyType": "ty",
-                    "type": "string",
-                    "value": "FLOOR"
-                }
-            ],
-            "name": "LevelTile",
-            "type": "class",
-            "useAs": [
-                "property",
-                "tile",
-                "project"
-            ]
         }
     ]
 }

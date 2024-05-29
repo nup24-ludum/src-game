@@ -135,10 +135,12 @@ public class View {
             decalBatch.add(dec);
         }
 
+        final float fadePercent = model.getFadePercent();
+        final float fadeSpeed = 0.5f; // Чем меньше значение, тем быстрее будет проявление
+
+        // Установите альфа-прозрачность напрямую, без округления
         final Decal dec2 = Decal.newDecal(2, 2, new TextureRegion(boxImg));
-        final float x = model.getFadePercent();
-        final float qnt = 5;
-        dec2.setColor(1, 1, 1, (float)(Math.ceil(x * qnt)) / qnt);
+        dec2.setColor(1, 1, 1, Math.min(fadePercent / fadeSpeed, 1f));
         dec2.setBlending(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
         Vector3 pos2 = logicToDisplay(new Logic.Pos(9, 2)).add(sizeOfBlock / 2f, sizeOfBlock / 2f, 0.02f);
         dec2.setPosition(pos2);
@@ -150,12 +152,12 @@ public class View {
             Vector3 pos = logicToDisplay(new Logic.Pos(18, 2)).add(sizeOfBlock / 2f, sizeOfBlock / 2f, 0.01f);
             dec.setPosition(pos);
             decalBatch.add(dec);
-        } else if (model.isGameDone() && x > 0.99) {
+        } else if (model.isGameDone()) {
             final Decal dec;
             if (model.isPlayerAlive()) {
-                dec = Decal.newDecal(sizeOfBlock * 4, sizeOfBlock * 3, new TextureRegion(success));
+                dec = Decal.newDecal(sizeOfBlock * 8, sizeOfBlock * 6, new TextureRegion(success));
             } else {
-                dec = Decal.newDecal(sizeOfBlock * 4, sizeOfBlock * 3, new TextureRegion(gameover));
+                dec = Decal.newDecal(sizeOfBlock * 8, sizeOfBlock * 6, new TextureRegion(gameover));
             }
             dec.setBlending(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
             Vector3 pos = logicToDisplay(new Logic.Pos(9, 6)).add(sizeOfBlock / 2f, sizeOfBlock / 2f, 0.03f);

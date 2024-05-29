@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<tileset version="1.10" tiledversion="1.10.2" name="tiles" tilewidth="100" tileheight="100" tilecount="24" columns="0">
+<tileset version="1.10" tiledversion="1.10.2" name="tiles" tilewidth="100" tileheight="100" tilecount="25" columns="0">
  <grid orientation="orthogonal" width="1" height="1"/>
  <tile id="0" type="LevelTile">
   <properties>
@@ -146,5 +146,12 @@
    <property name="java_ty" propertytype="ty" value="WALL"/>
   </properties>
   <image width="100" height="100" source="wall.png"/>
+ </tile>
+ <tile id="24" type="LevelTile">
+  <properties>
+   <property name="is_walkable" type="bool" value="true"/>
+   <property name="java_ty" propertytype="ty" value="DOOR"/>
+  </properties>
+  <image width="100" height="100" source="door.png"/>
  </tile>
 </tileset>

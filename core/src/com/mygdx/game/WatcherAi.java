@@ -157,12 +157,12 @@ public class WatcherAi {
         }
 
         // Showers
-        if (playerPos.y <= 4 && playerPos.x < 6) {
+        if (playerPos.y <= 3 && playerPos.x < 6) {
             return true;
         }
 
         // Watcher room
-        if (playerPos.y <= 4 && playerPos.x > 10) {
+        if (playerPos.y <= 3 && playerPos.x > 10) {
             return true;
         }
 
